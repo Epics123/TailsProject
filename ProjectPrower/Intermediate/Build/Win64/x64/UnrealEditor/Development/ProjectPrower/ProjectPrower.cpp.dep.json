@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\projectprower.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\program files\\epic games\\unrealengine\\engine\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\engine\\sharedpch.engine.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\projectprower\\definitions.projectprower.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\projectprower.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
