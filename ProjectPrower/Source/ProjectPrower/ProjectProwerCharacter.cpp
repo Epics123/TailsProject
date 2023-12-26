@@ -52,6 +52,27 @@ AProjectProwerCharacter::AProjectProwerCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	PrevTrueVelocities.AddUninitialized(2);
+}
+
+void AProjectProwerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	if(PrevMovementMode == EMovementMode::MOVE_Walking && GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
+	{
+		FVector PrevTrueVelocity = PrevTrueVelocities[0];
+		for(const FVector Vel : PrevTrueVelocities)
+		{
+			if(Vel.Z > PrevTrueVelocity.Z)
+			{
+				PrevTrueVelocity = Vel;
+			}
+		}
+
+		GetCharacterMovement()->AddImpulse(FVector(0.0f, 0.0f, PrevTrueVelocity.Z), true);
+	}
 }
 
 void AProjectProwerCharacter::BeginPlay()
@@ -66,6 +87,46 @@ void AProjectProwerCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+}
+
+void AProjectProwerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	AlignToSurface();
+	UpdatePrevVelocities();
+}
+
+void AProjectProwerCharacter::AlignToSurface()
+{
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+
+	FHitResult OutHit;
+	const FVector Start = GetActorLocation();
+	const FVector End = Start - (GetActorUpVector() * GroundTraceDistance);
+
+	GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
+	if(CapsuleComp)
+	{
+		const float Roll = FRotationMatrix::MakeFromXZ(CapsuleComp->GetForwardVector(), OutHit.ImpactNormal).Rotator().Roll;
+		const float Pitch = FRotationMatrix::MakeFromYZ(CapsuleComp->GetRightVector(), OutHit.ImpactNormal).Rotator().Pitch;
+		const float Yaw = CapsuleComp->GetComponentRotation().Yaw;
+
+		CapsuleComp->SetWorldRotation(FRotator(Pitch, Yaw, Roll));
+	}
+}
+
+void AProjectProwerCharacter::UpdatePrevVelocities()
+{
+	uint32 FrameIndex = 0;
+	if (FrameIndex < 2)
+	{
+		PrevTrueVelocities[FrameIndex] = GetCapsuleComponent()->GetPhysicsLinearVelocity();
+	}
+	else
+	{
+		FrameIndex = 0;
 	}
 }
 
