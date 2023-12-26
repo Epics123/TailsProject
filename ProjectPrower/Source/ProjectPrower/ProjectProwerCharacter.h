@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+
+#include "ProwerMovementComponent.h"
+
 #include "ProjectProwerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -21,7 +24,10 @@ class AProjectProwerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	AProjectProwerCharacter();
+	AProjectProwerCharacter(const FObjectInitializer& ObjectInitializer);
+
+	UFUNCTION(BlueprintCallable)
+	UProwerMovementComponent* GetProwerMovementComponent() { return Cast<UProwerMovementComponent>(GetMovementComponent()); }
 	
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
