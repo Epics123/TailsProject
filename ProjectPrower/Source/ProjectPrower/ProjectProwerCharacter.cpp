@@ -108,13 +108,15 @@ void AProjectProwerCharacter::AlignToSurface()
 	const FVector End = Start - (GetActorUpVector() * GroundTraceDistance);
 
 	GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-	if(CapsuleComp)
+	if(CapsuleComp && !GetProwerMovementComponent()->IsFalling())
 	{
 		const float Roll = FRotationMatrix::MakeFromXZ(CapsuleComp->GetForwardVector(), OutHit.ImpactNormal).Rotator().Roll;
 		const float Pitch = FRotationMatrix::MakeFromYZ(CapsuleComp->GetRightVector(), OutHit.ImpactNormal).Rotator().Pitch;
 		const float Yaw = CapsuleComp->GetComponentRotation().Yaw;
 
 		CapsuleComp->SetWorldRotation(FRotator(Pitch, Yaw, Roll));
+
+		GetProwerMovementComponent()->SetCurrentSurfaceNormal(OutHit.ImpactNormal);
 	}
 }
 

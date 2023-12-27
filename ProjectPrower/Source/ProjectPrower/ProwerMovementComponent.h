@@ -14,4 +14,16 @@ class PROJECTPROWER_API UProwerMovementComponent : public UCharacterMovementComp
 {
 	GENERATED_BODY()
 	
+public:
+	virtual bool DoJump(bool bReplayingMoves) override;
+
+	void SetCurrentSurfaceNormal(const FVector& NewNormal) { CurrentSurfaceNormal = NewNormal; }
+
+private:
+	FVector GetComponentZAxis() const;
+
+private:
+
+	/* Normal vector of the surface we are currently standing on */
+	FVector CurrentSurfaceNormal = FVector(0.0f, 0.0f, 1.0f);
 };
