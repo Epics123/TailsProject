@@ -71,6 +71,7 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	SmoothAlignToSurface(DeltaSeconds);
 	UpdateCameraMode();
 }
 
@@ -179,6 +180,37 @@ void AProjectProwerCharacter::UpdateCameraMode()
 		else
 		{
 			CameraManager->SetCameraMode(ECameraMode::FREE);
+		}
+	}
+}
+
+void AProjectProwerCharacter::SmoothAlignToSurface(float DeltaSeconds)
+{	
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	if(MovementComponent)
+	{
+		if(!MovementComponent->IsFalling())
+		{
+			FHitResult OutHit;
+			const FVector Start = GetActorLocation();
+			const FVector End = Start - FVector(0.0f, 0.0f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+			
+			FCollisionObjectQueryParams QueryParams(FCollisionObjectQueryParams::AllObjects);
+
+			GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, QueryParams);
+			if(OutHit.GetActor())
+			{
+				float TargetRoll = FRotationMatrix::MakeFromXZ(GetActorForwardVector(), OutHit.ImpactNormal).Rotator().Roll;
+				float TargetPitch = FRotationMatrix::MakeFromYZ(GetActorRightVector(), OutHit.ImpactNormal).Rotator().Pitch;
+
+				//FRotator TargetRotation = FRotator(TargetPitch, GetActorRotation().Yaw, TargetRoll);
+				//SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f));
+			}
+		}
+		else
+		{
+			FRotator TargetRotation = FRotator(0.0f, GetActorRotation().Yaw, 0.0f);
+			SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f));
 		}
 	}
 }

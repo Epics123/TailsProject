@@ -47,6 +47,7 @@ protected:
 	virtual FVector GetMovementRightVector();
 
 	void UpdateCameraMode();
+	void SmoothAlignToSurface(float DeltaSeconds);
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
