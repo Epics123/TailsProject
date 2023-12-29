@@ -16,8 +16,6 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
-DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
-
 UCLASS(config=Game)
 class AProjectProwerCharacter : public ACharacter
 {
@@ -38,9 +36,10 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
 
-protected:
+	virtual FVector GetMovementForwardVector();
+	virtual FVector GetMovementRightVector();
+			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -55,13 +54,12 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-private:
-	void AlignToSurface();
-	void UpdatePrevVelocities();
-
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float GroundTraceDistance = 100.0f;
+	/**
+	* If true, the forward and right vectors of the character will be used for moving instead of the camera vectors.
+	*/
+	UPROPERTY(Category = "Movement", BlueprintReadWrite, EditAnywhere)
+	bool bUseCharacterVectors = false;
 
 private:
 	/** Camera boom positioning the camera behind the character */

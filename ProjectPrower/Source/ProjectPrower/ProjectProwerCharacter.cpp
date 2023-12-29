@@ -11,7 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+DEFINE_LOG_CATEGORY_STATIC(LogTemplateCharacter, Error, All);
 
 //////////////////////////////////////////////////////////////////////////
 // AProjectProwerCharacter
@@ -94,43 +94,6 @@ void AProjectProwerCharacter::BeginPlay()
 void AProjectProwerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	AlignToSurface();
-	UpdatePrevVelocities();
-}
-
-void AProjectProwerCharacter::AlignToSurface()
-{
-	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
-
-	FHitResult OutHit;
-	const FVector Start = GetActorLocation();
-	const FVector End = Start - (GetActorUpVector() * GroundTraceDistance);
-
-	GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-	if(CapsuleComp && !GetProwerMovementComponent()->IsFalling())
-	{
-		const float Roll = FRotationMatrix::MakeFromXZ(CapsuleComp->GetForwardVector(), OutHit.ImpactNormal).Rotator().Roll;
-		const float Pitch = FRotationMatrix::MakeFromYZ(CapsuleComp->GetRightVector(), OutHit.ImpactNormal).Rotator().Pitch;
-		const float Yaw = CapsuleComp->GetComponentRotation().Yaw;
-
-		CapsuleComp->SetWorldRotation(FRotator(Pitch, Yaw, Roll));
-
-		GetProwerMovementComponent()->SetCurrentSurfaceNormal(OutHit.ImpactNormal);
-	}
-}
-
-void AProjectProwerCharacter::UpdatePrevVelocities()
-{
-	uint32 FrameIndex = 0;
-	if (FrameIndex < 2)
-	{
-		PrevTrueVelocities[FrameIndex] = GetCapsuleComponent()->GetPhysicsLinearVelocity();
-	}
-	else
-	{
-		FrameIndex = 0;
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -169,10 +132,12 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		//const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector ForwardDirection = GetMovementForwardVector();
 	
 		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		//const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector RightDirection = GetMovementRightVector();
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
@@ -190,5 +155,35 @@ void AProjectProwerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+FVector AProjectProwerCharacter::GetMovementForwardVector()
+{
+	if (bUseCharacterVectors)
+	{
+		// Add forward movement.
+		return FVector::VectorPlaneProject(FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X), GetActorQuat().GetAxisZ()).GetSafeNormal();
+	}
+	else //UseCameraVector
+	{
+		// Add forward movement based on camera.
+		return FVector::VectorPlaneProject(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X), GetActorQuat().GetAxisZ()).GetSafeNormal();
+	}
+}
+
+FVector AProjectProwerCharacter::GetMovementRightVector()
+{
+	const FVector AxisZ = GetActorQuat().GetAxisZ();
+
+	if (bUseCharacterVectors)
+	{
+		// Add side movement.
+		return AxisZ ^ FVector::VectorPlaneProject(FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X), AxisZ).GetSafeNormal();
+	}
+	else //UseCameraVectors
+	{
+		// Add side movement based on camera.
+		return AxisZ ^ FVector::VectorPlaneProject(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X), AxisZ).GetSafeNormal();
 	}
 }
