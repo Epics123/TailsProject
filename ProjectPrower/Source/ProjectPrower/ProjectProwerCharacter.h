@@ -24,10 +24,16 @@ class AProjectProwerCharacter : public ACharacter
 public:
 	AProjectProwerCharacter(const FObjectInitializer& ObjectInitializer);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UProwerMovementComponent* GetProwerMovementComponent() { return Cast<UProwerMovementComponent>(GetMovementComponent()); }
-	
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	class UCameraManagerComponent* GetCameraManager() const { return CameraManager; }
+
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 protected:
 
@@ -39,6 +45,8 @@ protected:
 
 	virtual FVector GetMovementForwardVector();
 	virtual FVector GetMovementRightVector();
+
+	void UpdateCameraMode();
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -49,17 +57,14 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-public:
 	/**
 	* If true, the forward and right vectors of the character will be used for moving instead of the camera vectors.
 	*/
 	UPROPERTY(Category = "Movement", BlueprintReadWrite, EditAnywhere)
 	bool bUseCharacterVectors = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator DefualtRotationRate = FRotator(0.0f, 540.0f, 0.0f);
 
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -69,6 +74,9 @@ private:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USceneComponent* CameraPivot;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -86,7 +94,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	TArray<FVector> PrevTrueVelocities;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraManagerComponent* CameraManager;
 };
 
