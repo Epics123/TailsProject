@@ -31,6 +31,7 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	DefaultRotationRate = GetCharacterMovement()->RotationRate;
 
 	// Create camera pivot
 	CameraPivot = CreateDefaultSubobject<USceneComponent>(TEXT("CameraPivot"));
@@ -71,8 +72,11 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	SmoothAlignToSurface(DeltaSeconds);
 	UpdateCameraMode();
+	ApplySlopePhysics();
+	
+	CheckSlopeDetach();
+	ResetRotationInAir(DeltaSeconds);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -111,11 +115,9 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
-		//const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector ForwardDirection = GetMovementForwardVector();
 	
 		// get right vector 
-		//const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		const FVector RightDirection = GetMovementRightVector();
 
 		// add movement 
@@ -184,33 +186,61 @@ void AProjectProwerCharacter::UpdateCameraMode()
 	}
 }
 
-void AProjectProwerCharacter::SmoothAlignToSurface(float DeltaSeconds)
+void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 {	
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	if(MovementComponent)
 	{
-		if(!MovementComponent->IsFalling())
-		{
-			FHitResult OutHit;
-			const FVector Start = GetActorLocation();
-			const FVector End = Start - FVector(0.0f, 0.0f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-			
-			FCollisionObjectQueryParams QueryParams(FCollisionObjectQueryParams::AllObjects);
-
-			GetWorld()->LineTraceSingleByObjectType(OutHit, Start, End, QueryParams);
-			if(OutHit.GetActor())
-			{
-				float TargetRoll = FRotationMatrix::MakeFromXZ(GetActorForwardVector(), OutHit.ImpactNormal).Rotator().Roll;
-				float TargetPitch = FRotationMatrix::MakeFromYZ(GetActorRightVector(), OutHit.ImpactNormal).Rotator().Pitch;
-
-				//FRotator TargetRotation = FRotator(TargetPitch, GetActorRotation().Yaw, TargetRoll);
-				//SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f));
-			}
-		}
-		else
+		if (MovementComponent->IsFalling())
 		{
 			FRotator TargetRotation = FRotator(0.0f, GetActorRotation().Yaw, 0.0f);
 			SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f));
 		}
 	}
+}
+
+void AProjectProwerCharacter::ApplySlopePhysics()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if(MovementComponent)
+	{
+		if(GetVelocity().Length() >= MovementComponent->MinSlopeEffectSpeed)
+		{
+			const FVector SlopeVector = GetActorForwardVector() * (GetActorForwardVector().Z * MovementComponent->SlopeFactor);
+			MovementComponent->Velocity += SlopeVector;
+		}
+	}
+}
+
+void AProjectProwerCharacter::CheckSlopeDetach()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if (MovementComponent && GetActorUpVector().Z <= (MovementComponent->GetWalkableFloorZ() + 0.035f))
+	{
+		if (GetVelocity().Length() <= MovementComponent->MinSlopeSpeed)
+		{
+			const FHitResult FloorHit = MovementComponent->CurrentFloor.HitResult;
+			const FVector EjectionVector = (GetSurfaceEjectionVector() * MovementComponent->SlopeEjectForce) * 10000.0f;
+
+			const float ZRange = FMath::GetMappedRangeValueClamped(FVector2D(MovementComponent->GetWalkableFloorZ(), -1.0f), FVector2D(0.15f, 1.0f), GetActorUpVector().Z);
+
+			MovementComponent->AddForce(EjectionVector * ZRange);
+		}
+	}
+}
+
+FVector AProjectProwerCharacter::GetSurfaceEjectionVector(float GravityZMultiplier)
+{
+	FVector FloorNormal;
+	float FloorAngle;
+
+	GetFloorAngle(FloorAngle, FloorNormal);
+	return FVector(FloorNormal.X, FloorNormal.Y, GetProwerMovementComponent()->GetGravityDirection().Z * GravityZMultiplier);
+}
+
+void AProjectProwerCharacter::GetFloorAngle(float& OutAngle, FVector& OutNormal)
+{
+	FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal;
+	OutAngle = FMath::RadiansToDegrees(FMath::Acos(FloorNormal | FVector::UpVector));
+	OutNormal = FloorNormal;
 }

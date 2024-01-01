@@ -585,6 +585,24 @@ public:
 	UPROPERTY(Category = "Alignment", BlueprintReadWrite, EditAnywhere)
 	uint32 bAlignCustomGravityToFloor : 1;
 
+	/**
+	* Minimum speed required to not fall off of slopes (mainly loops)
+	*/
+	UPROPERTY(Category = "Slope Movement", EditAnywhere, BlueprintReadWrite)
+	float MinSlopeSpeed = 750.0f;
+
+	/**
+	* Minimum speed required before slope physics take effect
+	*/
+	UPROPERTY(Category = "Slope Movement", EditAnywhere, BlueprintReadWrite)
+	float MinSlopeEffectSpeed = 100.0f;
+
+	UPROPERTY(Category = "Slope Movement", EditAnywhere, BlueprintReadWrite)
+	float SlopeFactor = -10.0f;
+
+	UPROPERTY(Category = "Slope Movement", EditAnywhere, BlueprintReadWrite)
+	float SlopeEjectForce = 5.0f;
+
 protected:
 
 	/**

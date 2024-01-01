@@ -47,7 +47,12 @@ protected:
 	virtual FVector GetMovementRightVector();
 
 	void UpdateCameraMode();
-	void SmoothAlignToSurface(float DeltaSeconds);
+	void ResetRotationInAir(float DeltaSeconds);
+
+	void ApplySlopePhysics();
+	void CheckSlopeDetach();
+	FVector GetSurfaceEjectionVector(float GravityZMultiplier = 1.0f);
+	void GetFloorAngle(float& OutAngle, FVector& OutNormal);
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -65,7 +70,7 @@ public:
 	bool bUseCharacterVectors = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FRotator DefualtRotationRate = FRotator(0.0f, 540.0f, 0.0f);
+	FRotator DefaultRotationRate;
 
 private:
 	/** Camera boom positioning the camera behind the character */

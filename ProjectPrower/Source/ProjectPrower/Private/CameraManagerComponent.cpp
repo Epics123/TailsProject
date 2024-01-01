@@ -75,7 +75,10 @@ void UCameraManagerComponent::SetFreeCameraMode()
 		Character->GetCameraBoom()->SetRelativeRotation(FRotator(0.0f, CharacterYaw, 0.0f));
 		Character->bUseCharacterVectors = false;
 
-		Character->GetCharacterMovement()->RotationRate = Character->DefualtRotationRate;
+		Character->GetCameraBoom()->bEnableCameraLag = false;
+		Character->GetCameraBoom()->bEnableCameraRotationLag = false;
+
+		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate;
 	}
 }
 
@@ -88,7 +91,12 @@ void UCameraManagerComponent::SetSlopeCameraMode()
 		Character->GetController()->SetControlRotation(DesiredRotation);
 		Character->bUseCharacterVectors = true;
 
-		Character->GetCharacterMovement()->RotationRate = Character->DefualtRotationRate * 0.5f;
+		Character->GetCameraBoom()->bEnableCameraLag = true;
+		Character->GetCameraBoom()->bEnableCameraRotationLag = true;
+		Character->GetCameraBoom()->CameraLagSpeed = 15.0f;
+		Character->GetCameraBoom()->CameraLagMaxDistance = 300.0f;
+
+		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate * 0.5f;
 	}
 }
 
