@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/TimelineComponent.h"
 #include "CameraManagerComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -14,7 +15,8 @@ enum class ECameraMode : uint8
 	LOOKAT = 2		UMETA(DisplayName = "LookAt"),
 	SLOPE = 3		UMETA(DisplayName = "Slope"),
 	TURNCIRCLE = 4	UMETA(DisplayName = "TurnCircle"),
-	CUSTOM = 5		UMETA(DisplayName = "Custom")
+	WEAPON = 5		UMETA(DisplayName = "Weapon"),
+	CUSTOM = 6		UMETA(DisplayName = "Custom")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -35,6 +37,24 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraAlignment(ECameraMode PrevMode, ECameraMode NewMode);
+
+	UFUNCTION()
+	void WeaponEquipTransitionUpdate(float Alpha);
+	UFUNCTION()
+	void OnWeaponEquipTransitionFinished();
+	UFUNCTION()
+	void WeaponUnequipTransitionUpdate(float Alpha);
+	UFUNCTION()
+	void OnWeaponUnequipTransitionFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void PlayWeaponEquipTransition();
+
+	UFUNCTION(BlueprintCallable)
+	void PlayWeaponUnequipTransition();
+
+	UTimelineComponent* GetWeaponEquipTransitionTimeline() { return WeaponEquipTransition; }
+	UTimelineComponent* GetWeaponUnequipTransitionTimeline() { return WeaponUnequipTransition; }
 
 protected:
 	// Called when the game starts
@@ -60,4 +80,23 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bResetCameraAfterLooping = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions")
+	FVector WeaponEquipTargetLocation = FVector(80.0f, 50.0f, 0.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions")
+	FVector DefaultRelativeCameraOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Transitions")
+	class UCurveFloat* WeaponTransitionCurve;
+
+	FOnTimelineFloat WeaponEquipTransitionUpdateDelegate {};
+	FOnTimelineEvent WeaponEquipTransitionFinished {};
+
+	FOnTimelineFloat WeaponUnequipTransitionUpdateDelegate{};
+	FOnTimelineEvent WeaponUnequipTransitionFinished{};
+
+protected:
+	UTimelineComponent* WeaponEquipTransition;
+	UTimelineComponent* WeaponUnequipTransition;
 };

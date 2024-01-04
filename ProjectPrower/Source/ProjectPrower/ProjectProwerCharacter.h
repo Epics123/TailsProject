@@ -16,6 +16,14 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
+UENUM(BlueprintType)
+enum class EMovementState
+{
+	FREE = 0	UMETA(DisplayName = "Free"),
+	WEAPON = 1	UMETA(DisplayName = "Weapon"),
+	LOCKED = 2	UMETA(DisplayName = "Locked")
+};
+
 UCLASS(config=Game)
 class AProjectProwerCharacter : public ACharacter
 {
@@ -35,6 +43,27 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TEnumAsByte<EMovementState> GetCurrentMovementState() { return CurrentMovementState; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TEnumAsByte<EMovementState> GetDefaultMovementState() { return DefaultMovementState; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetMovementState(TEnumAsByte<EMovementState> NewState);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	class AWeaponBase* GetCurrentWeapon() { return CurrentWeapon; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetWeapon(class AWeaponBase* Weapon) { CurrentWeapon = Weapon; }
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleWeaponVisibility(bool bIsVisible);
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleWeapon();
+
 protected:
 
 	/** Called for movement input */
@@ -53,6 +82,9 @@ protected:
 	void CheckSlopeDetach();
 	FVector GetSurfaceEjectionVector(float GravityZMultiplier = 1.0f);
 	void GetFloorAngle(float& OutAngle, FVector& OutNormal);
+
+	void ApplyFreeMovementStateSettings();
+	void ApplyWeaponMovementStateSettings();
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -71,6 +103,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator DefaultRotationRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	EMovementState DefaultMovementState = EMovementState::FREE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bWeaponEquipped = false;
 
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -100,7 +138,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** Weapon Equip/Unequip Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* WeaponEquipAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraManagerComponent* CameraManager;
+
+	EMovementState CurrentMovementState;
+
+	TObjectPtr<class AWeaponBase> CurrentWeapon;
 };
 

@@ -4,6 +4,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/ChildActorComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
@@ -12,6 +13,7 @@
 #include "InputActionValue.h"
 
 #include "CameraManagerComponent.h"
+#include "WeaponBase.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogTemplateCharacter, Error, All);
 
@@ -51,6 +53,56 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	CameraManager = CreateDefaultSubobject<UCameraManagerComponent>(TEXT("CameraManager"));
+
+	CurrentMovementState = DefaultMovementState;
+}
+
+void AProjectProwerCharacter::SetMovementState(TEnumAsByte<EMovementState> NewState)
+{
+	CurrentMovementState = NewState;
+
+	switch (CurrentMovementState)
+	{
+	case EMovementState::FREE:
+		ApplyFreeMovementStateSettings();
+		break;
+	case EMovementState::WEAPON:
+		ApplyWeaponMovementStateSettings();
+		break;
+	case EMovementState::LOCKED:
+		break;
+	default:
+		break;
+	}
+}
+
+void AProjectProwerCharacter::ToggleWeaponVisibility(bool bIsVisible)
+{
+	if(CurrentWeapon)
+	{
+		CurrentWeapon->SetActorHiddenInGame(!bIsVisible);
+	}
+}
+
+void AProjectProwerCharacter::ToggleWeapon()
+{
+	if(bWeaponEquipped)
+	{
+		// Update our movement state
+		SetMovementState(EMovementState::FREE);
+		ToggleWeaponVisibility(false);
+
+		CameraManager->PlayWeaponUnequipTransition();
+	}
+	else
+	{
+		// Update our movement state
+		SetMovementState(EMovementState::WEAPON);
+		ToggleWeaponVisibility(true);
+
+		CameraManager->PlayWeaponEquipTransition();
+	}
+	bWeaponEquipped = !bWeaponEquipped;
 }
 
 void AProjectProwerCharacter::BeginPlay()
@@ -96,6 +148,9 @@ void AProjectProwerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Look);
+
+		// Weapon Equip/Unequip
+		EnhancedInputComponent->BindAction(WeaponEquipAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::ToggleWeapon);
 	}
 	else
 	{
@@ -243,4 +298,22 @@ void AProjectProwerCharacter::GetFloorAngle(float& OutAngle, FVector& OutNormal)
 	FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal;
 	OutAngle = FMath::RadiansToDegrees(FMath::Acos(FloorNormal | FVector::UpVector));
 	OutNormal = FloorNormal;
+}
+
+void AProjectProwerCharacter::ApplyFreeMovementStateSettings()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if(MovementComponent)
+	{
+		MovementComponent->MaxWalkSpeed = 2000.0f;
+	}
+}
+
+void AProjectProwerCharacter::ApplyWeaponMovementStateSettings()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if (MovementComponent)
+	{
+		MovementComponent->MaxWalkSpeed = 900.0f;
+	}
 }

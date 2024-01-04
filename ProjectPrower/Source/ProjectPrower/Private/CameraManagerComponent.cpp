@@ -3,13 +3,24 @@
 
 #include "CameraManagerComponent.h"
 #include "../ProjectProwerCharacter.h"
+
 #include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
 UCameraManagerComponent::UCameraManagerComponent()
 {
 	OwningCharacter = Cast<AProjectProwerCharacter>(GetOwner());
 	CurrentCameraMode = DefaultCameraMode;
+
+	WeaponEquipTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponEquipTransition"));
+	WeaponUnequipTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponUnequipTransition"));
+
+	WeaponEquipTransitionUpdateDelegate.BindUFunction(this, FName("WeaponEquipTransitionUpdate"));
+	WeaponEquipTransitionFinished.BindUFunction(this, FName("OnWeaponEquipTransitionFinished"));
+
+	WeaponUnequipTransitionUpdateDelegate.BindUFunction(this, FName("WeaponUnequipTransitionUpdate"));
+	WeaponUnequipTransitionFinished.BindUFunction(this, FName("OnWeaponUnequipTransitionFinished"));
 }
 
 
@@ -31,6 +42,8 @@ void UCameraManagerComponent::SetCameraMode(ECameraMode NewMode)
 		SetSlopeCameraMode();
 		break;
 	case ECameraMode::TURNCIRCLE:
+		break;
+	case ECameraMode::WEAPON:
 		break;
 	case ECameraMode::CUSTOM:
 		break;
@@ -57,12 +70,67 @@ void UCameraManagerComponent::ResetCameraAlignment(ECameraMode PrevMode, ECamera
 	}
 }
 
+void UCameraManagerComponent::WeaponEquipTransitionUpdate(float Alpha)
+{
+	AProjectProwerCharacter* Character = GetOwningCharacter();
+	if(Character)
+	{
+		const FVector TargetLocation = FMath::Lerp(Character->GetFollowCamera()->GetRelativeLocation(), WeaponEquipTargetLocation, Alpha);
+		Character->GetFollowCamera()->SetRelativeLocation(TargetLocation);
+	}
+}
+
+void UCameraManagerComponent::OnWeaponEquipTransitionFinished()
+{
+
+}
+
+void UCameraManagerComponent::WeaponUnequipTransitionUpdate(float Alpha)
+{
+	AProjectProwerCharacter* Character = GetOwningCharacter();
+	if (Character)
+	{
+		const FVector TargetLocation = FMath::Lerp(Character->GetFollowCamera()->GetRelativeLocation(), DefaultRelativeCameraOffset, Alpha);
+		Character->GetFollowCamera()->SetRelativeLocation(TargetLocation);
+	}
+}
+
+void UCameraManagerComponent::OnWeaponUnequipTransitionFinished()
+{
+	
+}
+
+void UCameraManagerComponent::PlayWeaponEquipTransition()
+{
+	if(WeaponUnequipTransition->IsPlaying())
+	{
+		WeaponUnequipTransition->Stop();
+	}
+	WeaponEquipTransition->PlayFromStart();
+}
+
+void UCameraManagerComponent::PlayWeaponUnequipTransition()
+{
+	if (WeaponEquipTransition->IsPlaying())
+	{
+		WeaponEquipTransition->Stop();
+	}
+	WeaponUnequipTransition->PlayFromStart();
+}
+
 // Called when the game starts
 void UCameraManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	if(WeaponTransitionCurve)
+	{
+		WeaponEquipTransition->AddInterpFloat(WeaponTransitionCurve, WeaponEquipTransitionUpdateDelegate, FName("Alpha"));
+		WeaponEquipTransition->SetTimelineFinishedFunc(WeaponEquipTransitionFinished);
+
+		WeaponUnequipTransition->AddInterpFloat(WeaponTransitionCurve, WeaponUnequipTransitionUpdateDelegate, FName("Alpha"));
+		WeaponUnequipTransition->SetTimelineFinishedFunc(WeaponUnequipTransitionFinished);
+	}
 	
 }
 
@@ -77,6 +145,7 @@ void UCameraManagerComponent::SetFreeCameraMode()
 
 		Character->GetCameraBoom()->bEnableCameraLag = false;
 		Character->GetCameraBoom()->bEnableCameraRotationLag = false;
+		Character->GetCameraBoom()->ProbeSize = 12.0f;
 
 		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate;
 	}
@@ -95,6 +164,7 @@ void UCameraManagerComponent::SetSlopeCameraMode()
 		Character->GetCameraBoom()->bEnableCameraRotationLag = true;
 		Character->GetCameraBoom()->CameraLagSpeed = 15.0f;
 		Character->GetCameraBoom()->CameraLagMaxDistance = 300.0f;
+		Character->GetCameraBoom()->ProbeSize = 50.0f;
 
 		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate * 0.5f;
 	}
