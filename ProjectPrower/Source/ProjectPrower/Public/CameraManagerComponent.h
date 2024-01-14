@@ -42,10 +42,21 @@ public:
 	void WeaponEquipTransitionUpdate(float Alpha);
 	UFUNCTION()
 	void OnWeaponEquipTransitionFinished();
+
 	UFUNCTION()
 	void WeaponUnequipTransitionUpdate(float Alpha);
 	UFUNCTION()
 	void OnWeaponUnequipTransitionFinished();
+
+	UFUNCTION()
+	void WeaponAimTransitionUpdate(float Alpha);
+	UFUNCTION()
+	void OnWeaponAimTransitionFinished();
+
+	UFUNCTION()
+	void WeaponAimEndTransitionUpdate(float Alpha);
+	UFUNCTION()
+	void OnWeaponAimEndTransitionFinished();
 
 	UFUNCTION(BlueprintCallable)
 	void PlayWeaponEquipTransition();
@@ -53,8 +64,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PlayWeaponUnequipTransition();
 
+	UFUNCTION(BlueprintCallable)
+	void PlayAimTransition();
+
+	UFUNCTION(BlueprintCallable)
+	void PlayAimEndTransition();
+
 	UTimelineComponent* GetWeaponEquipTransitionTimeline() { return WeaponEquipTransition; }
 	UTimelineComponent* GetWeaponUnequipTransitionTimeline() { return WeaponUnequipTransition; }
+	UTimelineComponent* GetWeaponAimTransitionTimeline() { return WeaponAimTransition; }
+	UTimelineComponent* GetWeaponAimEndTransitionTimeline() { return WeaponAimEndTransition; }
 
 protected:
 	// Called when the game starts
@@ -81,14 +100,41 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bResetCameraAfterLooping = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions")
-	FVector WeaponEquipTargetLocation = FVector(80.0f, 50.0f, 0.0f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	FVector WeaponEquipTargetLocation = FVector(0.0f, 50.0f, 0.0f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
 	FVector DefaultRelativeCameraOffset = FVector::ZeroVector;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Transitions")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	FVector TargetCameraPivotLocation = FVector(0.0f, 0.0f, 42.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	FVector DefaultCameraPivotLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	float WeaponEquipArmLength = 200.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	float DefaultArmLength = 500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	FVector TargetSocketOffset = FVector(0.0f, 0.0f, 0.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transitions|WeaponEquip")
+	FVector DefaultSocketOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Transitions|WeaponEquip")
 	class UCurveFloat* WeaponTransitionCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Transitions|WeaponAim")
+	float AimTargetFOV = 60.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Transitions|WeaponAim")
+	float DefaultCameraFOV = 80.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Transitions|WeaponAim")
+	class UCurveFloat* WeaponAimCurve;
 
 	FOnTimelineFloat WeaponEquipTransitionUpdateDelegate {};
 	FOnTimelineEvent WeaponEquipTransitionFinished {};
@@ -96,7 +142,17 @@ public:
 	FOnTimelineFloat WeaponUnequipTransitionUpdateDelegate{};
 	FOnTimelineEvent WeaponUnequipTransitionFinished{};
 
+	FOnTimelineFloat WeaponAimTransitionUpdateDelegate{};
+	FOnTimelineEvent WeaponAimTransitionFinished{};
+
+	FOnTimelineFloat WeaponAimEndTransitionUpdateDelegate{};
+	FOnTimelineEvent WeaponAimEndTransitionFinished{};
+
 protected:
 	UTimelineComponent* WeaponEquipTransition;
 	UTimelineComponent* WeaponUnequipTransition;
+	UTimelineComponent* WeaponAimTransition;
+	UTimelineComponent* WeaponAimEndTransition;
+
+	float CurrentCameraFOV;
 };

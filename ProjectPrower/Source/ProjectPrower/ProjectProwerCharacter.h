@@ -33,7 +33,7 @@ public:
 	AProjectProwerCharacter(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	UProwerMovementComponent* GetProwerMovementComponent() { return Cast<UProwerMovementComponent>(GetMovementComponent()); }
+	UProwerMovementComponent* GetProwerMovementComponent() { return ProwerMovementComponent; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	class UCameraManagerComponent* GetCameraManager() const { return CameraManager; }
@@ -52,6 +52,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMovementState(TEnumAsByte<EMovementState> NewState);
 
+	/* Returns true if StateToCheck matches the current movement state*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsInMovementState(TEnumAsByte<EMovementState> StateToCheck) { return CurrentMovementState == StateToCheck; }
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	class AWeaponBase* GetCurrentWeapon() { return CurrentWeapon; }
 
@@ -64,6 +68,23 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	void EquipWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void UnequipWeapon();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsAiming() { return CurrentMovementState == EMovementState::WEAPON && bIsAiming; }
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void ToggleJumpballMesh(bool bShowJumpball);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetFlightState();
+
+	USceneComponent* GetCameraPivot() { return CameraPivot; }
+
 protected:
 
 	/** Called for movement input */
@@ -74,6 +95,16 @@ protected:
 
 	virtual FVector GetMovementForwardVector();
 	virtual FVector GetMovementRightVector();
+
+	void AimWeapon();
+	void AimWeaponEnd();
+
+	void StartFlying();
+	void StopFlying();
+	void Fly();
+
+	/* Smoothly resets VerticalFlyDirection back to 0 when fly input is not held*/
+	void SmoothResetVerticalFlyDirection(const float DeltaSeconds);
 
 	void UpdateCameraMode();
 	void ResetRotationInAir(float DeltaSeconds);
@@ -94,6 +125,8 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual void Landed(const FHitResult& Hit) override;
+
 public:
 	/**
 	* If true, the forward and right vectors of the character will be used for moving instead of the camera vectors.
@@ -101,14 +134,23 @@ public:
 	UPROPERTY(Category = "Movement", BlueprintReadWrite, EditAnywhere)
 	bool bUseCharacterVectors = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Movement", EditAnywhere, BlueprintReadWrite)
 	FRotator DefaultRotationRate;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(Category = "Movement", EditDefaultsOnly, BlueprintReadOnly)
 	EMovementState DefaultMovementState = EMovementState::FREE;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Movement", EditAnywhere, BlueprintReadWrite)
+	bool bIsFlying = false;
+
+	UPROPERTY(Category = "Movement", BlueprintReadWrite)
+	float VerticalFlyDirection = 0.0f;
+
+	UPROPERTY(Category = "Weapon", EditAnywhere, BlueprintReadWrite)
 	bool bWeaponEquipped = false;
+
+	UPROPERTY(Category = "Weapon", EditAnywhere, BlueprintReadWrite)
+	bool bCanEquipWeapon = true;
 
 private:
 	/** Camera boom positioning the camera behind the character */
@@ -121,6 +163,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USceneComponent* CameraPivot;
+
+	// Input //
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -142,11 +186,31 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* WeaponEquipAction;
 
+	/** Weapon Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* WeaponAimAction;
+
+	/** Weapon Aim End Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* WeaponAimEndAction;
+
+	/** Fly Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FlyAction;
+
+	// End Input //
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraManagerComponent* CameraManager;
+
+	UProwerMovementComponent* ProwerMovementComponent;
 
 	EMovementState CurrentMovementState;
 
 	TObjectPtr<class AWeaponBase> CurrentWeapon;
+
+	bool bIsAiming = false;
+
+	bool bFlyInputHeld = false;
 };
 

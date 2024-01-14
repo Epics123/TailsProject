@@ -572,6 +572,10 @@ protected:
 	virtual FVector GetComponentDesiredAxisZ() const;
 
 public:
+
+	float UpdateFlightTime(const float DeltaTime);
+
+public:
 	/**
 	* Gravity direction points to this location; use 0,0,0 to disable it.
 	* @note A negative GravityScale can reverse the calculated gravity direction.
@@ -602,6 +606,49 @@ public:
 
 	UPROPERTY(Category = "Slope Movement", EditAnywhere, BlueprintReadWrite)
 	float SlopeEjectForce = 5.0f;
+
+	UPROPERTY(Category = "Default Speeds", EditAnywhere, BlueprintReadWrite)
+	float DefaultWalkSpeed = 2000.0f;
+
+	UPROPERTY(Category = "Default Speeds", EditAnywhere, BlueprintReadWrite)
+	float DefaultWeaponWalkSpeed = 900.0f;
+
+	UPROPERTY(Category = "Default Speeds", EditAnywhere, BlueprintReadWrite)
+	float DefaultAimWalkSpeed = 600.0f;
+
+
+	/**
+	* Input multiplier for flying upwards
+	*/
+	UPROPERTY(Category = "Fly Movement", EditAnywhere, BlueprintReadWrite)
+	float VerticalFlyMovementMultiplier = 0.25f;
+
+	/**
+	 * Max distance we can travel vertically when flying before we are no longer moving upwards
+	 */
+	UPROPERTY(Category = "Fly Movement", EditAnywhere, BlueprintReadWrite)
+	float MaxVerticalFlyDistance = 1000.0f;
+
+	/**
+	* Maximum time we can hold the fly input before no longer being able to fly
+	*/
+	UPROPERTY(Category = "Fly Movement", EditAnywhere, BlueprintReadWrite)
+	float MaxFlightTime = 10.0f;
+
+	/**
+	* Z location derived from MaxVerticalFlyDistance
+	*/
+	UPROPERTY(Category = "Fly Movement", BlueprintReadWrite)
+	float MaxFlightZ;
+
+	UPROPERTY(Category = "Fly Movement", BlueprintReadWrite)
+	bool bHasFlightReset = true;
+
+	UPROPERTY(Category = "Fly Movement", BlueprintReadWrite)
+	float CurrentFlightTime;
+
+	UPROPERTY(Category = "Fly Movement", BlueprintReadWrite)
+	bool bIsFlightExhausted = false;
 
 protected:
 

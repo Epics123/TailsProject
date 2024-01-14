@@ -12,15 +12,24 @@ UCameraManagerComponent::UCameraManagerComponent()
 {
 	OwningCharacter = Cast<AProjectProwerCharacter>(GetOwner());
 	CurrentCameraMode = DefaultCameraMode;
+	CurrentCameraFOV = DefaultCameraFOV;
 
 	WeaponEquipTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponEquipTransition"));
 	WeaponUnequipTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponUnequipTransition"));
+	WeaponAimTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponAimTransition"));
+	WeaponAimEndTransition = CreateDefaultSubobject<UTimelineComponent>(TEXT("WeaponAimEndTransition"));
 
 	WeaponEquipTransitionUpdateDelegate.BindUFunction(this, FName("WeaponEquipTransitionUpdate"));
 	WeaponEquipTransitionFinished.BindUFunction(this, FName("OnWeaponEquipTransitionFinished"));
 
 	WeaponUnequipTransitionUpdateDelegate.BindUFunction(this, FName("WeaponUnequipTransitionUpdate"));
 	WeaponUnequipTransitionFinished.BindUFunction(this, FName("OnWeaponUnequipTransitionFinished"));
+
+	WeaponAimTransitionUpdateDelegate.BindUFunction(this, FName("WeaponAimTransitionUpdate"));
+	WeaponAimTransitionFinished.BindUFunction(this, FName("OnWeaponAimTransitionFinished"));
+
+	WeaponAimEndTransitionUpdateDelegate.BindUFunction(this, FName("WeaponAimEndTransitionUpdate"));
+	WeaponAimEndTransitionFinished.BindUFunction(this, FName("OnWeaponAimEndTransitionFinished"));
 }
 
 
@@ -77,6 +86,15 @@ void UCameraManagerComponent::WeaponEquipTransitionUpdate(float Alpha)
 	{
 		const FVector TargetLocation = FMath::Lerp(Character->GetFollowCamera()->GetRelativeLocation(), WeaponEquipTargetLocation, Alpha);
 		Character->GetFollowCamera()->SetRelativeLocation(TargetLocation);
+
+		const float TargetArmLength = FMath::Lerp(Character->GetCameraBoom()->TargetArmLength, WeaponEquipArmLength, Alpha);
+		Character->GetCameraBoom()->TargetArmLength = TargetArmLength;
+
+		const FVector TargetPivotLocation = FMath::Lerp(Character->GetCameraPivot()->GetRelativeLocation(), TargetCameraPivotLocation, Alpha);
+		Character->GetCameraPivot()->SetRelativeLocation(TargetPivotLocation);
+
+		const FVector SocketOffset = FMath::Lerp(Character->GetCameraBoom()->SocketOffset, TargetSocketOffset, Alpha);
+		Character->GetCameraBoom()->SocketOffset = SocketOffset;
 	}
 }
 
@@ -92,12 +110,51 @@ void UCameraManagerComponent::WeaponUnequipTransitionUpdate(float Alpha)
 	{
 		const FVector TargetLocation = FMath::Lerp(Character->GetFollowCamera()->GetRelativeLocation(), DefaultRelativeCameraOffset, Alpha);
 		Character->GetFollowCamera()->SetRelativeLocation(TargetLocation);
+
+		const float TargetArmLength = FMath::Lerp(Character->GetCameraBoom()->TargetArmLength, DefaultArmLength, Alpha);
+		Character->GetCameraBoom()->TargetArmLength = TargetArmLength;
+
+		const FVector TargetPivotLocation = FMath::Lerp(Character->GetCameraPivot()->GetRelativeLocation(), DefaultCameraPivotLocation, Alpha);
+		Character->GetCameraPivot()->SetRelativeLocation(TargetPivotLocation);
+
+		const FVector SocketOffset = FMath::Lerp(Character->GetCameraBoom()->SocketOffset, DefaultSocketOffset, Alpha);
+		Character->GetCameraBoom()->SocketOffset = SocketOffset;
 	}
 }
 
 void UCameraManagerComponent::OnWeaponUnequipTransitionFinished()
 {
 	
+}
+
+void UCameraManagerComponent::WeaponAimTransitionUpdate(float Alpha)
+{
+	AProjectProwerCharacter* Character = GetOwningCharacter();
+	if (Character)
+	{
+		CurrentCameraFOV = FMath::Lerp(CurrentCameraFOV, AimTargetFOV, Alpha);
+		Character->GetFollowCamera()->SetFieldOfView(CurrentCameraFOV);
+	}
+}
+
+void UCameraManagerComponent::OnWeaponAimTransitionFinished()
+{
+
+}
+
+void UCameraManagerComponent::WeaponAimEndTransitionUpdate(float Alpha)
+{
+	AProjectProwerCharacter* Character = GetOwningCharacter();
+	if (Character)
+	{
+		CurrentCameraFOV = FMath::Lerp(CurrentCameraFOV, DefaultCameraFOV, Alpha);
+		Character->GetFollowCamera()->SetFieldOfView(CurrentCameraFOV);
+	}
+}
+
+void UCameraManagerComponent::OnWeaponAimEndTransitionFinished()
+{
+
 }
 
 void UCameraManagerComponent::PlayWeaponEquipTransition()
@@ -118,6 +175,30 @@ void UCameraManagerComponent::PlayWeaponUnequipTransition()
 	WeaponUnequipTransition->PlayFromStart();
 }
 
+void UCameraManagerComponent::PlayAimTransition()
+{
+	if(WeaponAimEndTransition->IsPlaying())
+	{
+		WeaponAimEndTransition->Stop();
+	}
+	WeaponAimTransition->PlayFromStart();
+	
+	OwningCharacter->GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 35.0f;
+	OwningCharacter->GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -35.0f;
+}
+
+void UCameraManagerComponent::PlayAimEndTransition()
+{
+	if (WeaponAimTransition->IsPlaying())
+	{
+		WeaponAimTransition->Stop();
+	}
+	WeaponAimEndTransition->PlayFromStart();
+
+	OwningCharacter->GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 90.0f;
+	OwningCharacter->GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -90.0f;
+}
+
 // Called when the game starts
 void UCameraManagerComponent::BeginPlay()
 {
@@ -130,6 +211,15 @@ void UCameraManagerComponent::BeginPlay()
 
 		WeaponUnequipTransition->AddInterpFloat(WeaponTransitionCurve, WeaponUnequipTransitionUpdateDelegate, FName("Alpha"));
 		WeaponUnequipTransition->SetTimelineFinishedFunc(WeaponUnequipTransitionFinished);
+	}
+
+	if(WeaponAimCurve)
+	{
+		WeaponAimTransition->AddInterpFloat(WeaponAimCurve, WeaponAimTransitionUpdateDelegate, FName("Alpha"));
+		WeaponAimTransition->SetTimelineFinishedFunc(WeaponAimTransitionFinished);
+
+		WeaponAimEndTransition->AddInterpFloat(WeaponAimCurve, WeaponAimEndTransitionUpdateDelegate, FName("Alpha"));
+		WeaponAimEndTransition->SetTimelineFinishedFunc(WeaponAimEndTransitionFinished);
 	}
 	
 }

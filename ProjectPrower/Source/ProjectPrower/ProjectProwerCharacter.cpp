@@ -23,6 +23,8 @@ DEFINE_LOG_CATEGORY_STATIC(LogTemplateCharacter, Error, All);
 AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer.SetDefaultSubobjectClass<UProwerMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	ProwerMovementComponent = Cast<UProwerMovementComponent>(GetMovementComponent());
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -53,6 +55,8 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	CameraManager = CreateDefaultSubobject<UCameraManagerComponent>(TEXT("CameraManager"));
+	CameraManager->DefaultCameraPivotLocation = CameraPivot->GetRelativeLocation();
+	CameraManager->DefaultSocketOffset = CameraBoom->SocketOffset;
 
 	CurrentMovementState = DefaultMovementState;
 }
@@ -88,21 +92,59 @@ void AProjectProwerCharacter::ToggleWeapon()
 {
 	if(bWeaponEquipped)
 	{
-		// Update our movement state
-		SetMovementState(EMovementState::FREE);
-		ToggleWeaponVisibility(false);
-
-		CameraManager->PlayWeaponUnequipTransition();
+		UnequipWeapon();
 	}
 	else
+	{
+		EquipWeapon();
+	}
+	bWeaponEquipped = !bWeaponEquipped;
+}
+
+void AProjectProwerCharacter::EquipWeapon()
+{
+	if(bCanEquipWeapon)
 	{
 		// Update our movement state
 		SetMovementState(EMovementState::WEAPON);
 		ToggleWeaponVisibility(true);
+		CameraBoom->ProbeSize = 5.0f;
 
 		CameraManager->PlayWeaponEquipTransition();
 	}
-	bWeaponEquipped = !bWeaponEquipped;
+}
+
+void AProjectProwerCharacter::UnequipWeapon()
+{
+	// Make sure we are no longer aiming
+	AimWeaponEnd();
+
+	// Update our movement state
+	SetMovementState(EMovementState::FREE);
+	ToggleWeaponVisibility(false);
+	CameraBoom->ProbeSize = 12.0f;
+
+	CameraManager->PlayWeaponUnequipTransition();
+}
+
+void AProjectProwerCharacter::ResetFlightState()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if(MovementComponent)
+	{
+		bIsFlying = false;
+		MovementComponent->bIsFlightExhausted = false;
+		MovementComponent->bHasFlightReset = true;
+		MovementComponent->CurrentFlightTime = MovementComponent->MaxFlightTime;
+		MovementComponent->BrakingDecelerationFalling = 0.0f;
+
+		if (MovementComponent->GravityScale != 1.0f)
+		{
+			MovementComponent->GravityScale = 1.0f;
+		}
+
+		bCanEquipWeapon = true;
+	}
 }
 
 void AProjectProwerCharacter::BeginPlay()
@@ -129,6 +171,15 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 	
 	CheckSlopeDetach();
 	ResetRotationInAir(DeltaSeconds);
+
+	SmoothResetVerticalFlyDirection(DeltaSeconds);
+}
+
+void AProjectProwerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	ResetFlightState();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -151,6 +202,15 @@ void AProjectProwerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 		// Weapon Equip/Unequip
 		EnhancedInputComponent->BindAction(WeaponEquipAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::ToggleWeapon);
+
+		// Weapon Aim
+		EnhancedInputComponent->BindAction(WeaponAimAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeapon);
+		EnhancedInputComponent->BindAction(WeaponAimEndAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeaponEnd);
+
+		// Fly
+		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Started, this, &AProjectProwerCharacter::StartFlying);
+		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Completed, this, &AProjectProwerCharacter::StopFlying);
+		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Fly);
 	}
 	else
 	{
@@ -183,8 +243,10 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 
 void AProjectProwerCharacter::Look(const FInputActionValue& Value)
 {
+	const float AxisMultiplier = IsAiming() ? 0.25f : 1.0f;
+
 	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	FVector2D LookAxisVector = Value.Get<FVector2D>() * AxisMultiplier;
 
 	if (Controller != nullptr)
 	{
@@ -224,13 +286,142 @@ FVector AProjectProwerCharacter::GetMovementRightVector()
 	}
 }
 
+void AProjectProwerCharacter::AimWeapon()
+{
+	if (CurrentMovementState == EMovementState::WEAPON)
+	{
+		bIsAiming = true;
+		CameraManager->PlayAimTransition();
+		bUseControllerRotationYaw = true;
+		
+		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+		MovementComponent->bOrientRotationToMovement = false;
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultAimWalkSpeed;
+		if(MovementComponent->Velocity.Length() >= MovementComponent->MaxWalkSpeed)
+		{
+			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
+		}
+		
+	}
+}
+
+void AProjectProwerCharacter::AimWeaponEnd()
+{
+	if (CurrentMovementState == EMovementState::WEAPON)
+	{
+		bIsAiming = false;
+		CameraManager->PlayAimEndTransition();
+		bUseControllerRotationYaw = false;
+		
+		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+		MovementComponent->bOrientRotationToMovement = true;
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+	}
+}
+
+void AProjectProwerCharacter::StartFlying()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+
+	if(MovementComponent->IsFalling() && !MovementComponent->bIsFlightExhausted)
+	{
+		// Stop jumping and hide jumpball mesh
+		StopJumping();
+		if(IsInMovementState(EMovementState::FREE))
+		{
+			ToggleJumpballMesh(false);
+		}
+		CameraManager->SetCameraMode(ECameraMode::FREE);
+
+		MovementComponent->SetMovementMode(MOVE_Flying);
+		MovementComponent->MaxAcceleration = 2048.0f;
+		if (MovementComponent->GravityScale != 1.0f)
+		{
+			MovementComponent->GravityScale = 1.0f;
+		}
+
+		if(MovementComponent->bHasFlightReset)
+		{
+			MovementComponent->MaxFlightZ = (GetActorLocation() + (FVector(0.0f, 0.0f, 1.0f) * MovementComponent->MaxVerticalFlyDistance)).Z;
+			MovementComponent->bHasFlightReset = false;
+		}
+
+		MovementComponent->BrakingDecelerationFalling = 50.0f;
+		
+		bIsFlying = true;
+		bFlyInputHeld = true;
+	}
+}
+
+void AProjectProwerCharacter::StopFlying()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	if (MovementComponent->MovementMode == EMovementMode::MOVE_Flying)
+	{
+		MovementComponent->SetMovementMode(MOVE_Falling);
+		MovementComponent->MaxAcceleration = 600.0f;
+		MovementComponent->GravityScale = 0.25f;
+		MovementComponent->Velocity = FVector(MovementComponent->Velocity.X, MovementComponent->Velocity.Y, 0.0f);
+
+		bFlyInputHeld = false;
+	}
+}
+
+void AProjectProwerCharacter::Fly()
+{
+	if(bIsFlying && !GetProwerMovementComponent()->bIsFlightExhausted)
+	{
+		const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+
+		if(GetActorLocation().Z > GetProwerMovementComponent()->MaxFlightZ)
+		{
+			const FVector TargetLocation = FVector(GetActorLocation().X, GetActorLocation().Y, GetProwerMovementComponent()->MaxFlightZ);
+			SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetLocation, DeltaSeconds, 5.0f));
+			VerticalFlyDirection = FMath::FInterpTo(VerticalFlyDirection, 0.0f, DeltaSeconds, 5.0f);
+		}
+		else
+		{
+			const float X = GetActorForwardVector().X * 0.05f;
+			const float Y = GetActorForwardVector().Y * 0.05f;
+			AddMovementInput(FVector(X, Y, 1.0f), GetProwerMovementComponent()->VerticalFlyMovementMultiplier);
+			VerticalFlyDirection = FMath::FInterpTo(VerticalFlyDirection, 1.0f, DeltaSeconds, 5.0f);
+		}
+
+		const float FlightTime = GetProwerMovementComponent()->UpdateFlightTime(DeltaSeconds);
+		if(FlightTime <= 0.0f)
+		{
+			StopFlying();
+			if(bWeaponEquipped)
+			{
+				UnequipWeapon();
+				bCanEquipWeapon = false;
+			}
+		}
+	}
+}
+
+void AProjectProwerCharacter::SmoothResetVerticalFlyDirection(const float DeltaSeconds)
+{
+	if(bIsFlying && GetProwerMovementComponent())
+	{
+		if(GetProwerMovementComponent()->bIsFlightExhausted)
+		{
+			VerticalFlyDirection = FMath::FInterpTo(VerticalFlyDirection, -1.0f, DeltaSeconds, 5.0f);
+		}
+		else if (!bFlyInputHeld)
+		{
+			VerticalFlyDirection = FMath::FInterpTo(VerticalFlyDirection, 0.0f, DeltaSeconds, 5.0f);
+		}
+	}
+}
+
 void AProjectProwerCharacter::UpdateCameraMode()
 {
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if(CameraManager && MovementComponent)
 	{
 		const FHitResult FloorHit = MovementComponent->CurrentFloor.HitResult;
-		if(FloorHit.ImpactNormal.Z <= MovementComponent->GetWalkableFloorZ() && !MovementComponent->IsFalling())
+		if(FloorHit.ImpactNormal.Z <= MovementComponent->GetWalkableFloorZ() && !MovementComponent->IsFalling() && !bIsFlying)
 		{
 			CameraManager->SetCameraMode(ECameraMode::SLOPE);
 		}
@@ -256,15 +447,19 @@ void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 
 void AProjectProwerCharacter::ApplySlopePhysics()
 {
-	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if(MovementComponent)
+	if(!bIsFlying)
 	{
-		if(GetVelocity().Length() >= MovementComponent->MinSlopeEffectSpeed)
+		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+		if (MovementComponent)
 		{
-			const FVector SlopeVector = GetActorForwardVector() * (GetActorForwardVector().Z * MovementComponent->SlopeFactor);
-			MovementComponent->Velocity += SlopeVector;
+			if (GetVelocity().Length() >= MovementComponent->MinSlopeEffectSpeed)
+			{
+				const FVector SlopeVector = GetActorForwardVector() * (GetActorForwardVector().Z * MovementComponent->SlopeFactor);
+				MovementComponent->Velocity += SlopeVector;
+			}
 		}
 	}
+	
 }
 
 void AProjectProwerCharacter::CheckSlopeDetach()
@@ -305,8 +500,10 @@ void AProjectProwerCharacter::ApplyFreeMovementStateSettings()
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if(MovementComponent)
 	{
-		MovementComponent->MaxWalkSpeed = 2000.0f;
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWalkSpeed;
 	}
+
+	bIsAiming = false;
 }
 
 void AProjectProwerCharacter::ApplyWeaponMovementStateSettings()
@@ -314,6 +511,10 @@ void AProjectProwerCharacter::ApplyWeaponMovementStateSettings()
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if (MovementComponent)
 	{
-		MovementComponent->MaxWalkSpeed = 900.0f;
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+		if(MovementComponent->Velocity.Length() > MovementComponent->MaxWalkSpeed)
+		{
+			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
+		}
 	}
 }

@@ -53,6 +53,7 @@ UProwerMovementComponent::UProwerMovementComponent(const FObjectInitializer& Obj
 	GravityPoint = FVector::ZeroVector;
 	OldGravityPoint = GravityPoint;
 	OldGravityScale = GravityScale;
+	CurrentFlightTime = MaxFlightTime;
 }
 
 bool UProwerMovementComponent::DoJump(bool bReplayingMoves)
@@ -3652,6 +3653,17 @@ FVector UProwerMovementComponent::GetComponentDesiredAxisZ() const
 	}
 
 	return GetComponentAxisZ();
+}
+
+float UProwerMovementComponent::UpdateFlightTime(const float DeltaTime)
+{
+	CurrentFlightTime -= DeltaTime;
+	if(CurrentFlightTime <= 0.0f)
+	{
+		bIsFlightExhausted = true;
+		CurrentFlightTime = 0.0f;
+	}
+	return CurrentFlightTime;
 }
 
 void UProwerMovementComponent::UpdateComponentRotation()
