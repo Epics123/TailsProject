@@ -14,14 +14,15 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	ENGINE_API UClass* Z_Construct_UClass_UCameraComponent_NoRegister();
 	ENGINE_API UClass* Z_Construct_UClass_USceneComponent_NoRegister();
 	ENGINE_API UClass* Z_Construct_UClass_USpringArmComponent_NoRegister();
-	ENHANCEDINPUT_API UClass* Z_Construct_UClass_UInputAction_NoRegister();
-	ENHANCEDINPUT_API UClass* Z_Construct_UClass_UInputMappingContext_NoRegister();
 	PROJECTPROWER_API UClass* Z_Construct_UClass_AProjectProwerCharacter();
 	PROJECTPROWER_API UClass* Z_Construct_UClass_AProjectProwerCharacter_NoRegister();
-	PROJECTPROWER_API UClass* Z_Construct_UClass_AWeaponBase_NoRegister();
+	PROJECTPROWER_API UClass* Z_Construct_UClass_AWisponBase_NoRegister();
 	PROJECTPROWER_API UClass* Z_Construct_UClass_UCameraManagerComponent_NoRegister();
+	PROJECTPROWER_API UClass* Z_Construct_UClass_UPlayerInputData_NoRegister();
 	PROJECTPROWER_API UClass* Z_Construct_UClass_UProwerMovementComponent_NoRegister();
 	PROJECTPROWER_API UEnum* Z_Construct_UEnum_ProjectPrower_EMovementState();
+	PROJECTPROWER_API UFunction* Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature();
+	PROJECTPROWER_API UFunction* Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature();
 	UPackage* Z_Construct_UPackage__Script_ProjectPrower();
 // End Cross Module References
 	static FEnumRegistrationInfo Z_Registration_Info_UEnum_EMovementState;
@@ -82,6 +83,58 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		}
 		return Z_Registration_Info_UEnum_EMovementState.InnerSingleton;
 	}
+	struct Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics
+	{
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics::FuncParams = { (UObject*(*)())Z_Construct_UPackage__Script_ProjectPrower, nullptr, "AimStartedDelegate__DelegateSignature", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x00130000, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics::Function_MetaDataParams), Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
+void FAimStartedDelegate_DelegateWrapper(const FMulticastScriptDelegate& AimStartedDelegate)
+{
+	AimStartedDelegate.ProcessMulticastDelegate<UObject>(NULL);
+}
+	struct Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics
+	{
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics::FuncParams = { (UObject*(*)())Z_Construct_UPackage__Script_ProjectPrower, nullptr, "AimEndedDelegate__DelegateSignature", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x00130000, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics::Function_MetaDataParams), Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
+void FAimEndedDelegate_DelegateWrapper(const FMulticastScriptDelegate& AimEndedDelegate)
+{
+	AimEndedDelegate.ProcessMulticastDelegate<UObject>(NULL);
+}
 	DEFINE_FUNCTION(AProjectProwerCharacter::execResetFlightState)
 	{
 		P_FINISH;
@@ -94,6 +147,27 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		P_FINISH;
 		P_NATIVE_BEGIN;
 		*(bool*)Z_Param__Result=P_THIS->IsAiming();
+		P_NATIVE_END;
+	}
+	DEFINE_FUNCTION(AProjectProwerCharacter::execToggleWeaponAltFire)
+	{
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		P_THIS->ToggleWeaponAltFire();
+		P_NATIVE_END;
+	}
+	DEFINE_FUNCTION(AProjectProwerCharacter::execWeaponAltFire)
+	{
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		P_THIS->WeaponAltFire();
+		P_NATIVE_END;
+	}
+	DEFINE_FUNCTION(AProjectProwerCharacter::execFireWeapon)
+	{
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		P_THIS->FireWeapon();
 		P_NATIVE_END;
 	}
 	DEFINE_FUNCTION(AProjectProwerCharacter::execUnequipWeapon)
@@ -127,7 +201,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	}
 	DEFINE_FUNCTION(AProjectProwerCharacter::execSetWeapon)
 	{
-		P_GET_OBJECT(AWeaponBase,Z_Param_Weapon);
+		P_GET_OBJECT(AWisponBase,Z_Param_Weapon);
 		P_FINISH;
 		P_NATIVE_BEGIN;
 		P_THIS->SetWeapon(Z_Param_Weapon);
@@ -137,7 +211,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	{
 		P_FINISH;
 		P_NATIVE_BEGIN;
-		*(AWeaponBase**)Z_Param__Result=P_THIS->GetCurrentWeapon();
+		*(AWisponBase**)Z_Param__Result=P_THIS->GetCurrentWeapon();
 		P_NATIVE_END;
 	}
 	DEFINE_FUNCTION(AProjectProwerCharacter::execIsInMovementState)
@@ -200,6 +274,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		UClass* Class = AProjectProwerCharacter::StaticClass();
 		static const FNameNativePtrPair Funcs[] = {
 			{ "EquipWeapon", &AProjectProwerCharacter::execEquipWeapon },
+			{ "FireWeapon", &AProjectProwerCharacter::execFireWeapon },
 			{ "GetCameraManager", &AProjectProwerCharacter::execGetCameraManager },
 			{ "GetCurrentMovementState", &AProjectProwerCharacter::execGetCurrentMovementState },
 			{ "GetCurrentWeapon", &AProjectProwerCharacter::execGetCurrentWeapon },
@@ -211,8 +286,10 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 			{ "SetMovementState", &AProjectProwerCharacter::execSetMovementState },
 			{ "SetWeapon", &AProjectProwerCharacter::execSetWeapon },
 			{ "ToggleWeapon", &AProjectProwerCharacter::execToggleWeapon },
+			{ "ToggleWeaponAltFire", &AProjectProwerCharacter::execToggleWeaponAltFire },
 			{ "ToggleWeaponVisibility", &AProjectProwerCharacter::execToggleWeaponVisibility },
 			{ "UnequipWeapon", &AProjectProwerCharacter::execUnequipWeapon },
+			{ "WeaponAltFire", &AProjectProwerCharacter::execWeaponAltFire },
 		};
 		FNativeFunctionRegistrar::RegisterFunctions(Class, Funcs, UE_ARRAY_COUNT(Funcs));
 	}
@@ -235,6 +312,28 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		if (!ReturnFunction)
 		{
 			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AProjectProwerCharacter_EquipWeapon_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
+	struct Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics
+	{
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AProjectProwerCharacter, nullptr, "FireWeapon", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x00020401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics::Function_MetaDataParams), Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon_Statics::FuncParams);
 		}
 		return ReturnFunction;
 	}
@@ -318,7 +417,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	{
 		struct ProjectProwerCharacter_eventGetCurrentWeapon_Parms
 		{
-			AWeaponBase* ReturnValue;
+			AWisponBase* ReturnValue;
 		};
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_ReturnValue;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
@@ -327,7 +426,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 #endif
 		static const UECodeGen_Private::FFunctionParams FuncParams;
 	};
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ProjectProwerCharacter_eventGetCurrentWeapon_Parms, ReturnValue), Z_Construct_UClass_AWeaponBase_NoRegister, METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ProjectProwerCharacter_eventGetCurrentWeapon_Parms, ReturnValue), Z_Construct_UClass_AWisponBase_NoRegister, METADATA_PARAMS(0, nullptr) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon_Statics::NewProp_ReturnValue,
 	};
@@ -572,7 +671,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	{
 		struct ProjectProwerCharacter_eventSetWeapon_Parms
 		{
-			AWeaponBase* Weapon;
+			AWisponBase* Weapon;
 		};
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_Weapon;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
@@ -581,7 +680,7 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 #endif
 		static const UECodeGen_Private::FFunctionParams FuncParams;
 	};
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon_Statics::NewProp_Weapon = { "Weapon", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ProjectProwerCharacter_eventSetWeapon_Parms, Weapon), Z_Construct_UClass_AWeaponBase_NoRegister, METADATA_PARAMS(0, nullptr) };
+	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon_Statics::NewProp_Weapon = { "Weapon", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(ProjectProwerCharacter_eventSetWeapon_Parms, Weapon), Z_Construct_UClass_AWisponBase_NoRegister, METADATA_PARAMS(0, nullptr) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon_Statics::NewProp_Weapon,
 	};
@@ -659,6 +758,28 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		}
 		return ReturnFunction;
 	}
+	struct Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics
+	{
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AProjectProwerCharacter, nullptr, "ToggleWeaponAltFire", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04020401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics::Function_MetaDataParams), Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
 	struct Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponVisibility_Statics
 	{
 		struct ProjectProwerCharacter_eventToggleWeaponVisibility_Parms
@@ -720,6 +841,28 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		}
 		return ReturnFunction;
 	}
+	struct Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics
+	{
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics::Function_MetaDataParams[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_AProjectProwerCharacter, nullptr, "WeaponAltFire", nullptr, nullptr, nullptr, 0, 0, RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x00020401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics::Function_MetaDataParams), Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics::Function_MetaDataParams) };
+	UFunction* Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire_Statics::FuncParams);
+		}
+		return ReturnFunction;
+	}
 	IMPLEMENT_CLASS_NO_AUTO_REGISTRATION(AProjectProwerCharacter);
 	UClass* Z_Construct_UClass_AProjectProwerCharacter_NoRegister()
 	{
@@ -766,6 +909,14 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		static void NewProp_bCanEquipWeapon_SetBit(void* Obj);
 		static const UECodeGen_Private::FBoolPropertyParams NewProp_bCanEquipWeapon;
 #if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_OnAimStarted_MetaData[];
+#endif
+		static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnAimStarted;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_OnAimEnded_MetaData[];
+#endif
+		static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnAimEnded;
+#if WITH_METADATA
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_CameraBoom_MetaData[];
 #endif
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_CameraBoom;
@@ -778,37 +929,9 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 #endif
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_CameraPivot;
 #if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_DefaultMappingContext_MetaData[];
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_InputData_MetaData[];
 #endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_DefaultMappingContext;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_JumpAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_JumpAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_MoveAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_MoveAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_LookAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_LookAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_WeaponEquipAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_WeaponEquipAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_WeaponAimAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_WeaponAimAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_WeaponAimEndAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_WeaponAimEndAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_FlyAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_FlyAction;
+		static const UECodeGen_Private::FObjectPtrPropertyParams NewProp_InputData;
 #if WITH_METADATA
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_CameraManager_MetaData[];
 #endif
@@ -824,20 +947,23 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::DependentSingletons) < 16);
 	const FClassFunctionLinkInfo Z_Construct_UClass_AProjectProwerCharacter_Statics::FuncInfo[] = {
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_EquipWeapon, "EquipWeapon" }, // 1258606378
+		{ &Z_Construct_UFunction_AProjectProwerCharacter_FireWeapon, "FireWeapon" }, // 3260172020
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetCameraManager, "GetCameraManager" }, // 653592809
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentMovementState, "GetCurrentMovementState" }, // 3190907930
-		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon, "GetCurrentWeapon" }, // 1203254288
+		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetCurrentWeapon, "GetCurrentWeapon" }, // 2350359845
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetDefaultMovementState, "GetDefaultMovementState" }, // 920827592
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_GetProwerMovementComponent, "GetProwerMovementComponent" }, // 440245385
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_IsAiming, "IsAiming" }, // 1767380142
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_IsInMovementState, "IsInMovementState" }, // 2910398411
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_ResetFlightState, "ResetFlightState" }, // 1885492335
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_SetMovementState, "SetMovementState" }, // 349371000
-		{ &Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon, "SetWeapon" }, // 3392083152
+		{ &Z_Construct_UFunction_AProjectProwerCharacter_SetWeapon, "SetWeapon" }, // 4261726164
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_ToggleJumpballMesh, "ToggleJumpballMesh" }, // 2414625457
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeapon, "ToggleWeapon" }, // 2364228148
+		{ &Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponAltFire, "ToggleWeaponAltFire" }, // 695464035
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_ToggleWeaponVisibility, "ToggleWeaponVisibility" }, // 3948385950
 		{ &Z_Construct_UFunction_AProjectProwerCharacter_UnequipWeapon, "UnequipWeapon" }, // 1498262740
+		{ &Z_Construct_UFunction_AProjectProwerCharacter_WeaponAltFire, "WeaponAltFire" }, // 2659968307
 	};
 	static_assert(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::FuncInfo) < 2048);
 #if WITH_METADATA
@@ -921,6 +1047,18 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 	}
 	const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bCanEquipWeapon = { "bCanEquipWeapon", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(AProjectProwerCharacter), &Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bCanEquipWeapon_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bCanEquipWeapon_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bCanEquipWeapon_MetaData) };
 #if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimStarted_MetaData[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimStarted = { "OnAimStarted", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, OnAimStarted), Z_Construct_UDelegateFunction_ProjectPrower_AimStartedDelegate__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimStarted_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimStarted_MetaData) }; // 2447660249
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimEnded_MetaData[] = {
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
+	};
+#endif
+	const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimEnded = { "OnAimEnded", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, OnAimEnded), Z_Construct_UDelegateFunction_ProjectPrower_AimEndedDelegate__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimEnded_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimEnded_MetaData) }; // 282599956
+#if WITH_METADATA
 	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraBoom_MetaData[] = {
 		{ "AllowPrivateAccess", "true" },
 		{ "Category", "Camera" },
@@ -960,129 +1098,25 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 #endif
 	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraPivot = { "CameraPivot", nullptr, (EPropertyFlags)0x00400000000a001d, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, CameraPivot), Z_Construct_UClass_USceneComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraPivot_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraPivot_MetaData) };
 #if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_DefaultMappingContext_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** MappingContext */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "MappingContext" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_DefaultMappingContext = { "DefaultMappingContext", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, DefaultMappingContext), Z_Construct_UClass_UInputMappingContext_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_DefaultMappingContext_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_DefaultMappingContext_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_JumpAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Jump Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Jump Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_JumpAction = { "JumpAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, JumpAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_JumpAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_JumpAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_MoveAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Move Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Move Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_MoveAction = { "MoveAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, MoveAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_MoveAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_MoveAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_LookAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Look Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Look Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_LookAction = { "LookAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, LookAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_LookAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_LookAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponEquipAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Weapon Equip/Unequip Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Weapon Equip/Unequip Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponEquipAction = { "WeaponEquipAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, WeaponEquipAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponEquipAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponEquipAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Weapon Aim Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Weapon Aim Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimAction = { "WeaponAimAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, WeaponAimAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimEndAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Weapon Aim End Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Weapon Aim End Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimEndAction = { "WeaponAimEndAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, WeaponAimEndAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimEndAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimEndAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FlyAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Fly Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Fly Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FlyAction = { "FlyAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, FlyAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FlyAction_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FlyAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager_MetaData[] = {
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_InputData_MetaData[] = {
 		{ "AllowPrivateAccess", "true" },
 		{ "Category", "Camera" },
 #if !UE_BUILD_SHIPPING
-		{ "Comment", "// End Input //\n" },
+		{ "Comment", "// Input //\n" },
 #endif
-		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "End Input" },
+		{ "ToolTip", "Input" },
 #endif
+	};
+#endif
+	const UECodeGen_Private::FObjectPtrPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_InputData = { "InputData", nullptr, (EPropertyFlags)0x0044000000000015, UECodeGen_Private::EPropertyGenFlags::Object | UECodeGen_Private::EPropertyGenFlags::ObjectPtr, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, InputData), Z_Construct_UClass_UPlayerInputData_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_InputData_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_InputData_MetaData) };
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager_MetaData[] = {
+		{ "AllowPrivateAccess", "true" },
+		{ "Category", "Input" },
+		{ "EditInline", "true" },
+		{ "ModuleRelativePath", "ProjectProwerCharacter.h" },
 	};
 #endif
 	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager = { "CameraManager", nullptr, (EPropertyFlags)0x004000000008001d, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AProjectProwerCharacter, CameraManager), Z_Construct_UClass_UCameraManagerComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager_MetaData), Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager_MetaData) };
@@ -1095,17 +1129,12 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_VerticalFlyDirection,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bWeaponEquipped,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_bCanEquipWeapon,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimStarted,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_OnAimEnded,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraBoom,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FollowCamera,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraPivot,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_DefaultMappingContext,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_JumpAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_MoveAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_LookAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponEquipAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_WeaponAimEndAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_FlyAction,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_InputData,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AProjectProwerCharacter_Statics::NewProp_CameraManager,
 	};
 	const FCppClassTypeInfoStatic Z_Construct_UClass_AProjectProwerCharacter_Statics::StaticCppClassTypeInfo = {
@@ -1150,9 +1179,9 @@ void EmptyLinkFunctionForGeneratedCodeProjectProwerCharacter() {}
 		{ EMovementState_StaticEnum, TEXT("EMovementState"), &Z_Registration_Info_UEnum_EMovementState, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 1126189747U) },
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_AProjectProwerCharacter, AProjectProwerCharacter::StaticClass, TEXT("AProjectProwerCharacter"), &Z_Registration_Info_UClass_AProjectProwerCharacter, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AProjectProwerCharacter), 653942067U) },
+		{ Z_Construct_UClass_AProjectProwerCharacter, AProjectProwerCharacter::StaticClass, TEXT("AProjectProwerCharacter"), &Z_Registration_Info_UClass_AProjectProwerCharacter, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AProjectProwerCharacter), 1561573932U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_273705470(TEXT("/Script/ProjectPrower"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_3998190107(TEXT("/Script/ProjectPrower"),
 		Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_Statics::ClassInfo),
 		nullptr, 0,
 		Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_eheil_Documents_Unreal_Projects_TailsProject_ProjectPrower_Source_ProjectPrower_ProjectProwerCharacter_h_Statics::EnumInfo));

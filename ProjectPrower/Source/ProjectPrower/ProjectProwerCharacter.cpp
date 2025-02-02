@@ -13,7 +13,8 @@
 #include "InputActionValue.h"
 
 #include "CameraManagerComponent.h"
-#include "WeaponBase.h"
+#include "WisponBase.h"
+#include "PlayerInputData.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogTemplateCharacter, Error, All);
 
@@ -34,7 +35,7 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	//GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	DefaultRotationRate = GetCharacterMovement()->RotationRate;
 
 	// Create camera pivot
@@ -127,9 +128,34 @@ void AProjectProwerCharacter::UnequipWeapon()
 	CameraManager->PlayWeaponUnequipTransition();
 }
 
+void AProjectProwerCharacter::FireWeapon()
+{
+	if(CurrentMovementState == EMovementState::WEAPON && CurrentWeapon)
+	{
+		CurrentWeapon->FireWeapon();
+	}
+}
+
+void AProjectProwerCharacter::WeaponAltFire()
+{
+	if (CurrentMovementState == EMovementState::WEAPON && CurrentWeapon)
+	{
+		CurrentWeapon->FireWeapon(true);
+	}
+}
+
+void AProjectProwerCharacter::ToggleWeaponAltFire()
+{
+	if(CurrentWeapon)
+	{
+		const bool IsInAltFire = CurrentWeapon->IsInAltFire();
+		CurrentWeapon->SetAltFire(!IsInAltFire);
+	}
+}
+
 void AProjectProwerCharacter::ResetFlightState()
 {
-	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	/*UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if(MovementComponent)
 	{
 		bIsFlying = false;
@@ -144,7 +170,7 @@ void AProjectProwerCharacter::ResetFlightState()
 		}
 
 		bCanEquipWeapon = true;
-	}
+	}*/
 }
 
 void AProjectProwerCharacter::BeginPlay()
@@ -157,7 +183,15 @@ void AProjectProwerCharacter::BeginPlay()
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			if(InputData)
+			{
+				UInputMappingContext* DefaultMappingContext = InputData->DefaultMappingContext;
+				if(DefaultMappingContext)
+				{
+					Subsystem->AddMappingContext(DefaultMappingContext, 0);
+				}	
+			}
+			
 		}
 	}
 }
@@ -166,10 +200,10 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	UpdateCameraMode();
-	ApplySlopePhysics();
+	//UpdateCameraMode();
+	//ApplySlopePhysics();
 	
-	CheckSlopeDetach();
+	//CheckSlopeDetach();
 	ResetRotationInAir(DeltaSeconds);
 
 	SmoothResetVerticalFlyDirection(DeltaSeconds);
@@ -190,27 +224,34 @@ void AProjectProwerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		if(InputData)
+		{
+			// Jumping
+			EnhancedInputComponent->BindAction(InputData->JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+			EnhancedInputComponent->BindAction(InputData->JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Move);
+			// Moving
+			EnhancedInputComponent->BindAction(InputData->MoveAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Move);
 
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Look);
+			// Looking
+			EnhancedInputComponent->BindAction(InputData->LookAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Look);
 
-		// Weapon Equip/Unequip
-		EnhancedInputComponent->BindAction(WeaponEquipAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::ToggleWeapon);
+			// Weapon Equip/Unequip
+			EnhancedInputComponent->BindAction(InputData->WeaponEquipAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::ToggleWeapon);
 
-		// Weapon Aim
-		EnhancedInputComponent->BindAction(WeaponAimAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeapon);
-		EnhancedInputComponent->BindAction(WeaponAimEndAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeaponEnd);
+			// Weapon Aim
+			EnhancedInputComponent->BindAction(InputData->WeaponAimAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeapon);
+			EnhancedInputComponent->BindAction(InputData->WeaponAimEndAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::AimWeaponEnd);
 
-		// Fly
-		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Started, this, &AProjectProwerCharacter::StartFlying);
-		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Completed, this, &AProjectProwerCharacter::StopFlying);
-		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Fly);
+			// Weapon Fire
+			EnhancedInputComponent->BindAction(InputData->WeaponFireAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::FireWeapon);
+			EnhancedInputComponent->BindAction(InputData->WeaponAltFireAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::WeaponAltFire);
+
+			// Fly
+			EnhancedInputComponent->BindAction(InputData->FlyAction, ETriggerEvent::Started, this, &AProjectProwerCharacter::StartFlying);
+			EnhancedInputComponent->BindAction(InputData->FlyAction, ETriggerEvent::Completed, this, &AProjectProwerCharacter::StopFlying);
+			EnhancedInputComponent->BindAction(InputData->FlyAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Fly);
+		}
 	}
 	else
 	{
@@ -225,15 +266,15 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 
 	if (Controller != nullptr)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const UProwerMovementComponent* MovementComp = GetProwerMovementComponent();
+
+		const FVector VelocityDir = MovementComp->GetLastUpdateVelocity().GetSafeNormal();
 
 		// get forward vector
-		const FVector ForwardDirection = GetMovementForwardVector();
+		const FVector ForwardDirection = VelocityDir.IsNearlyZero(10.0f) ? GetActorForwardVector() : VelocityDir;//GetActorForwardVector();//GetMovementForwardVector();
 	
 		// get right vector 
-		const FVector RightDirection = GetMovementRightVector();
+		const FVector RightDirection = (MovementComp->GetCurrentSurfaceNormal() ^ ForwardDirection).GetSafeNormal(); //GetActorRightVector();//GetMovementRightVector();
 
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
@@ -296,12 +337,15 @@ void AProjectProwerCharacter::AimWeapon()
 		
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 		MovementComponent->bOrientRotationToMovement = false;
-		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultAimWalkSpeed;
+		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultAimWalkSpeed;
 		if(MovementComponent->Velocity.Length() >= MovementComponent->MaxWalkSpeed)
 		{
 			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
 		}
-		
+		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 20.0f;
+		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -15.0f;
+
+		OnAimStarted.Broadcast();
 	}
 }
 
@@ -315,7 +359,12 @@ void AProjectProwerCharacter::AimWeaponEnd()
 		
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 		MovementComponent->bOrientRotationToMovement = true;
-		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+
+		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 90.0f;
+		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -90.0f;
+
+		OnAimEnded.Broadcast();
 	}
 }
 
@@ -323,34 +372,34 @@ void AProjectProwerCharacter::StartFlying()
 {
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 
-	if(MovementComponent->IsFalling() && !MovementComponent->bIsFlightExhausted)
-	{
-		// Stop jumping and hide jumpball mesh
-		StopJumping();
-		if(IsInMovementState(EMovementState::FREE))
-		{
-			ToggleJumpballMesh(false);
-		}
-		CameraManager->SetCameraMode(ECameraMode::FREE);
+	//if(MovementComponent->IsFalling() && !MovementComponent->bIsFlightExhausted)
+	//{
+	//	// Stop jumping and hide jumpball mesh
+	//	StopJumping();
+	//	if(IsInMovementState(EMovementState::FREE))
+	//	{
+	//		ToggleJumpballMesh(false);
+	//	}
+	//	CameraManager->SetCameraMode(ECameraMode::FREE);
 
-		MovementComponent->SetMovementMode(MOVE_Flying);
-		MovementComponent->MaxAcceleration = 2048.0f;
-		if (MovementComponent->GravityScale != 1.0f)
-		{
-			MovementComponent->GravityScale = 1.0f;
-		}
+	//	MovementComponent->SetMovementMode(MOVE_Flying);
+	//	MovementComponent->MaxAcceleration = 2048.0f;
+	//	if (MovementComponent->GravityScale != 1.0f)
+	//	{
+	//		MovementComponent->GravityScale = 1.0f;
+	//	}
 
-		if(MovementComponent->bHasFlightReset)
-		{
-			MovementComponent->MaxFlightZ = (GetActorLocation() + (FVector(0.0f, 0.0f, 1.0f) * MovementComponent->MaxVerticalFlyDistance)).Z;
-			MovementComponent->bHasFlightReset = false;
-		}
+	//	if(MovementComponent->bHasFlightReset)
+	//	{
+	//		MovementComponent->MaxFlightZ = (GetActorLocation() + (FVector(0.0f, 0.0f, 1.0f) * MovementComponent->MaxVerticalFlyDistance)).Z;
+	//		MovementComponent->bHasFlightReset = false;
+	//	}
 
-		MovementComponent->BrakingDecelerationFalling = 50.0f;
-		
-		bIsFlying = true;
-		bFlyInputHeld = true;
-	}
+	//	MovementComponent->BrakingDecelerationFalling = 50.0f;
+	//	
+	//	bIsFlying = true;
+	//	bFlyInputHeld = true;
+	//}
 }
 
 void AProjectProwerCharacter::StopFlying()
@@ -369,7 +418,7 @@ void AProjectProwerCharacter::StopFlying()
 
 void AProjectProwerCharacter::Fly()
 {
-	if(bIsFlying && !GetProwerMovementComponent()->bIsFlightExhausted)
+	/*if(bIsFlying && !GetProwerMovementComponent()->bIsFlightExhausted)
 	{
 		const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 
@@ -397,12 +446,12 @@ void AProjectProwerCharacter::Fly()
 				bCanEquipWeapon = false;
 			}
 		}
-	}
+	}*/
 }
 
 void AProjectProwerCharacter::SmoothResetVerticalFlyDirection(const float DeltaSeconds)
 {
-	if(bIsFlying && GetProwerMovementComponent())
+	/*if(bIsFlying && GetProwerMovementComponent())
 	{
 		if(GetProwerMovementComponent()->bIsFlightExhausted)
 		{
@@ -412,7 +461,7 @@ void AProjectProwerCharacter::SmoothResetVerticalFlyDirection(const float DeltaS
 		{
 			VerticalFlyDirection = FMath::FInterpTo(VerticalFlyDirection, 0.0f, DeltaSeconds, 5.0f);
 		}
-	}
+	}*/
 }
 
 void AProjectProwerCharacter::UpdateCameraMode()
@@ -423,11 +472,11 @@ void AProjectProwerCharacter::UpdateCameraMode()
 		const FHitResult FloorHit = MovementComponent->CurrentFloor.HitResult;
 		if(FloorHit.ImpactNormal.Z <= MovementComponent->GetWalkableFloorZ() && !MovementComponent->IsFalling() && !bIsFlying)
 		{
-			CameraManager->SetCameraMode(ECameraMode::SLOPE);
+			//CameraManager->SetCameraMode(ECameraMode::SLOPE);
 		}
 		else
 		{
-			CameraManager->SetCameraMode(ECameraMode::FREE);
+			//CameraManager->SetCameraMode(ECameraMode::FREE);
 		}
 	}
 }
@@ -447,7 +496,7 @@ void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 
 void AProjectProwerCharacter::ApplySlopePhysics()
 {
-	if(!bIsFlying)
+	/*if(!bIsFlying)
 	{
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 		if (MovementComponent)
@@ -458,13 +507,13 @@ void AProjectProwerCharacter::ApplySlopePhysics()
 				MovementComponent->Velocity += SlopeVector;
 			}
 		}
-	}
+	}*/
 	
 }
 
 void AProjectProwerCharacter::CheckSlopeDetach()
 {
-	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	/*UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if (MovementComponent && GetActorUpVector().Z <= (MovementComponent->GetWalkableFloorZ() + 0.035f))
 	{
 		if (GetVelocity().Length() <= MovementComponent->MinSlopeSpeed)
@@ -476,7 +525,7 @@ void AProjectProwerCharacter::CheckSlopeDetach()
 
 			MovementComponent->AddForce(EjectionVector * ZRange);
 		}
-	}
+	}*/
 }
 
 FVector AProjectProwerCharacter::GetSurfaceEjectionVector(float GravityZMultiplier)
@@ -500,7 +549,7 @@ void AProjectProwerCharacter::ApplyFreeMovementStateSettings()
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if(MovementComponent)
 	{
-		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWalkSpeed;
+		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWalkSpeed;
 	}
 
 	bIsAiming = false;
@@ -511,7 +560,7 @@ void AProjectProwerCharacter::ApplyWeaponMovementStateSettings()
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
 	if (MovementComponent)
 	{
-		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
 		if(MovementComponent->Velocity.Length() > MovementComponent->MaxWalkSpeed)
 		{
 			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;

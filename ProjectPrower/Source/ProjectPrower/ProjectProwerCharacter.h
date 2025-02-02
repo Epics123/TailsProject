@@ -24,6 +24,9 @@ enum class EMovementState
 	LOCKED = 2	UMETA(DisplayName = "Locked")
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimStartedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimEndedDelegate);
+
 UCLASS(config=Game)
 class AProjectProwerCharacter : public ACharacter
 {
@@ -57,10 +60,10 @@ public:
 	bool IsInMovementState(TEnumAsByte<EMovementState> StateToCheck) { return CurrentMovementState == StateToCheck; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	class AWeaponBase* GetCurrentWeapon() { return CurrentWeapon; }
+	class AWisponBase* GetCurrentWeapon() { return CurrentWeapon; }
 
 	UFUNCTION(BlueprintCallable)
-	void SetWeapon(class AWeaponBase* Weapon) { CurrentWeapon = Weapon; }
+	void SetWeapon(class AWisponBase* Weapon) { CurrentWeapon = Weapon; }
 
 	UFUNCTION(BlueprintCallable)
 	void ToggleWeaponVisibility(bool bIsVisible);
@@ -73,6 +76,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UnequipWeapon();
+
+	UFUNCTION()
+	void FireWeapon();
+
+	UFUNCTION()
+	void WeaponAltFire();
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleWeaponAltFire();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAiming() { return CurrentMovementState == EMovementState::WEAPON && bIsAiming; }
@@ -116,6 +128,8 @@ protected:
 
 	void ApplyFreeMovementStateSettings();
 	void ApplyWeaponMovementStateSettings();
+
+	class UPlayerInputData* GetInputData() { return InputData; }
 			
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -152,6 +166,12 @@ public:
 	UPROPERTY(Category = "Weapon", EditAnywhere, BlueprintReadWrite)
 	bool bCanEquipWeapon = true;
 
+	UPROPERTY(BlueprintAssignable)
+	FAimStartedDelegate OnAimStarted;
+
+	UPROPERTY(BlueprintAssignable)
+	FAimEndedDelegate OnAimEnded;
+
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -165,52 +185,22 @@ private:
 	USceneComponent* CameraPivot;
 
 	// Input //
-
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
-
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
-
-	/** Weapon Equip/Unequip Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* WeaponEquipAction;
-
-	/** Weapon Aim Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* WeaponAimAction;
-
-	/** Weapon Aim End Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* WeaponAimEndAction;
-
-	/** Fly Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* FlyAction;
-
-	// End Input //
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UPlayerInputData> InputData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UCameraManagerComponent* CameraManager;
 
 	UProwerMovementComponent* ProwerMovementComponent;
 
 	EMovementState CurrentMovementState;
 
-	TObjectPtr<class AWeaponBase> CurrentWeapon;
+	TObjectPtr<class AWisponBase> CurrentWeapon;
 
 	bool bIsAiming = false;
 
 	bool bFlyInputHeld = false;
+
+	FVector GravityDirection = FVector(0, 0, -1);
 };
 

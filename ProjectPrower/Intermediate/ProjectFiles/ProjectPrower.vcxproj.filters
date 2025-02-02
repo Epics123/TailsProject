@@ -61,23 +61,83 @@
     <ClInclude Include="..\..\Source\ProjectPrower\ProwerMovementComponent.h">
       <Filter>Source\ProjectPrower</Filter>
     </ClInclude>
+    <Filter Include="Source\ProjectPrower\Characters">
+      <UniqueIdentifier>{54CB92A9-0571-3332-9C99-F1FDFE9308FB}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectPrower\Characters\PlayableBase.cpp">
+      <Filter>Source\ProjectPrower\Characters</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectPrower\Characters\PlayableBase.h">
+      <Filter>Source\ProjectPrower\Characters</Filter>
+    </ClInclude>
+    <Filter Include="Source\ProjectPrower\Data">
+      <UniqueIdentifier>{BA08123C-86DD-336B-8B3C-68D19E0D164C}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectPrower\Data\MotionParams.cpp">
+      <Filter>Source\ProjectPrower\Data</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ProjectPrower\Data\MotionParams.h">
+      <Filter>Source\ProjectPrower\Data</Filter>
+    </ClInclude>
     <Filter Include="Source\ProjectPrower\Private">
       <UniqueIdentifier>{1961D8DF-49E1-3E60-A04F-4DB7865A36D7}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\BaseEnemy.cpp">
+      <Filter>Source\ProjectPrower\Private</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\ProjectPrower\Private\CameraManagerComponent.cpp">
+      <Filter>Source\ProjectPrower\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\PlayerInputData.cpp">
+      <Filter>Source\ProjectPrower\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\ProjectileBase.cpp">
       <Filter>Source\ProjectPrower\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\ProjectPrower\Private\WeaponBase.cpp">
       <Filter>Source\ProjectPrower\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\WeaponData.cpp">
+      <Filter>Source\ProjectPrower\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\WisponBase.cpp">
+      <Filter>Source\ProjectPrower\Private</Filter>
+    </ClCompile>
+    <Filter Include="Source\ProjectPrower\Private\Characters">
+      <UniqueIdentifier>{B24C7290-66D0-3F71-A5A6-C132B54E0045}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ProjectPrower\Private\Characters\ProwerController.cpp">
+      <Filter>Source\ProjectPrower\Private\Characters</Filter>
+    </ClCompile>
     <Filter Include="Source\ProjectPrower\Public">
       <UniqueIdentifier>{237DB2FD-EAD7-366F-9ABE-EDD05140C30F}</UniqueIdentifier>
     </Filter>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\BaseEnemy.h">
+      <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\ProjectPrower\Public\CameraManagerComponent.h">
+      <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\PlayerInputData.h">
+      <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\ProjectileBase.h">
       <Filter>Source\ProjectPrower\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\ProjectPrower\Public\WeaponBase.h">
       <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\WeaponData.h">
+      <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\WisponBase.h">
+      <Filter>Source\ProjectPrower\Public</Filter>
+    </ClInclude>
+    <Filter Include="Source\ProjectPrower\Public\Characters">
+      <UniqueIdentifier>{5B693533-1B1D-361E-8FFD-843DEC1FC289}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\ProjectPrower\Public\Characters\ProwerController.h">
+      <Filter>Source\ProjectPrower\Public\Characters</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

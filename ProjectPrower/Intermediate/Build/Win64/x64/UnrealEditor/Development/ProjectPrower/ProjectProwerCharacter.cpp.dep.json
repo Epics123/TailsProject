@@ -70,8 +70,14 @@
             "c:\\program files\\epic games\\unrealengine\\engine\\source\\runtime\\engine\\classes\\components\\timelinecomponent.h",
             "c:\\program files\\epic games\\unrealengine\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\timelinecomponent.generated.h",
             "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\cameramanagercomponent.generated.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\public\\wisponbase.h",
             "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\public\\weaponbase.h",
-            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\weaponbase.generated.h"
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\weaponbase.generated.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\public\\weapondata.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\weapondata.generated.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\wisponbase.generated.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\source\\projectprower\\public\\playerinputdata.h",
+            "c:\\users\\eheil\\documents\\unreal projects\\tailsproject\\projectprower\\intermediate\\build\\win64\\unrealeditor\\inc\\projectprower\\uht\\playerinputdata.generated.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
