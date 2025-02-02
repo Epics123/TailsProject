@@ -41,14 +41,14 @@ void UCameraManagerComponent::SetCameraMode(ECameraMode NewMode)
 	switch (CurrentCameraMode)
 	{
 	case ECameraMode::FREE:
-		SetFreeCameraMode();
+		//SetFreeCameraMode();
 		break;
 	case ECameraMode::LOCKED:
 		break;
 	case ECameraMode::LOOKAT:
 		break;
 	case ECameraMode::SLOPE:
-		SetSlopeCameraMode();
+		//SetSlopeCameraMode();
 		break;
 	case ECameraMode::TURNCIRCLE:
 		break;
@@ -224,39 +224,39 @@ void UCameraManagerComponent::BeginPlay()
 	
 }
 
-void UCameraManagerComponent::SetFreeCameraMode()
-{
-	AProjectProwerCharacter* Character = GetOwningCharacter();
-	if (Character)
-	{
-		const float CharacterYaw = Character->GetActorRotation().Yaw;
-		Character->GetCameraBoom()->SetRelativeRotation(FRotator(0.0f, CharacterYaw, 0.0f));
-		Character->bUseCharacterVectors = false;
-
-		Character->GetCameraBoom()->bEnableCameraLag = false;
-		Character->GetCameraBoom()->bEnableCameraRotationLag = false;
-		Character->GetCameraBoom()->ProbeSize = 12.0f;
-
-		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate;
-	}
-}
-
-void UCameraManagerComponent::SetSlopeCameraMode()
-{
-	AProjectProwerCharacter* Character = GetOwningCharacter();
-	if(Character)
-	{
-		const FRotator DesiredRotation = Character->GetActorRotation();
-		Character->GetController()->SetControlRotation(DesiredRotation);
-		Character->bUseCharacterVectors = true;
-
-		Character->GetCameraBoom()->bEnableCameraLag = true;
-		Character->GetCameraBoom()->bEnableCameraRotationLag = true;
-		Character->GetCameraBoom()->CameraLagSpeed = 15.0f;
-		Character->GetCameraBoom()->CameraLagMaxDistance = 300.0f;
-		Character->GetCameraBoom()->ProbeSize = 50.0f;
-
-		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate * 0.5f;
-	}
-}
+//void UCameraManagerComponent::SetFreeCameraMode()
+//{
+//	AProjectProwerCharacter* Character = GetOwningCharacter();
+//	if (Character)
+//	{
+//		const float CharacterYaw = Character->GetActorRotation().Yaw;
+//		Character->GetCameraBoom()->SetRelativeRotation(FRotator(0.0f, CharacterYaw, 0.0f));
+//		//Character->bUseCharacterVectors = false;
+//
+//		Character->GetCameraBoom()->bEnableCameraLag = false;
+//		Character->GetCameraBoom()->bEnableCameraRotationLag = false;
+//		Character->GetCameraBoom()->ProbeSize = 12.0f;
+//
+//		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate;
+//	}
+//}
+//
+//void UCameraManagerComponent::SetSlopeCameraMode()
+//{
+//	AProjectProwerCharacter* Character = GetOwningCharacter();
+//	if(Character)
+//	{
+//		const FRotator DesiredRotation = Character->GetActorRotation();
+//		Character->GetController()->SetControlRotation(DesiredRotation);
+//		//Character->bUseCharacterVectors = true;
+//
+//		Character->GetCameraBoom()->bEnableCameraLag = true;
+//		Character->GetCameraBoom()->bEnableCameraRotationLag = true;
+//		Character->GetCameraBoom()->CameraLagSpeed = 15.0f;
+//		Character->GetCameraBoom()->CameraLagMaxDistance = 300.0f;
+//		Character->GetCameraBoom()->ProbeSize = 50.0f;
+//
+//		Character->GetCharacterMovement()->RotationRate = Character->DefaultRotationRate * 0.5f;
+//	}
+//}
 

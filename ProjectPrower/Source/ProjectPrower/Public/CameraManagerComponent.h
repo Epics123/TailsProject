@@ -79,8 +79,8 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void SetFreeCameraMode();
-	void SetSlopeCameraMode();
+	/*void SetFreeCameraMode();
+	void SetSlopeCameraMode();*/
 
 public:
 	TObjectPtr<class AProjectProwerCharacter> OwningCharacter;

@@ -12,6 +12,13 @@
 #include "GameFramework/NavMovementComponent.h"
 #include "ProwerMovementComponent.generated.h"
 
+static TAutoConsoleVariable<int32> CVar_DrawMovementDebug
+(
+	TEXT("Movement.Debug.Draw"),
+	0,
+	TEXT("Draw movement debug information")
+);
+
 /**
  * 
  */
@@ -28,7 +35,14 @@ public:
 
 	const FVector GetCurrentSurfaceNormal() const { return CurrentNormal; }
 
+	bool ShouldDrawMovementDebug() const
+	{
+		return CVar_DrawMovementDebug.GetValueOnGameThread() != 0;
+	}
+
 protected:
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	virtual void PhysWalking(float DeltaTime, int32 Iterations) override;
 	virtual void PhysFalling(float DeltaTime, int32 Iterations) override;
 
@@ -49,14 +63,23 @@ private:
 	void CalculateTangentVelocity(const FVector& SurfaceNormal, float DeltaTime);
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement")
-	float CustomGravityStrength = 50.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
 	float GroundTraceDistance = 75.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
 	float NormalSmoothingSpeed = 5.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
+	float TangentVelocityScale = 1.0f;
+
+	/** The maximum angle we allow our input to be relative to the camera. 
+		If the surface angle is past this threshold, the character's local vectors will be used.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General", meta=(ClampMin = -1, ClampMax = 1, UIMin = -1, UIMax = 1))
+	float MaxCameraVectorAngle = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
+	bool bForceCharacterVectors = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Rotation")
 	float RotationSmoothingSpeed = 5.0f;
@@ -65,10 +88,10 @@ public:
 	TObjectPtr<UCurveFloat> RotateToVelocityCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Rotation")
-	float RotateToVelocityThreshold = 100.0f;
+	float RotateToVelocityThreshold = 10.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement")
-	float TangentVelocityScale = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Gravity")
+	float CustomGravityStrength = 50.0f;
 
 private:
 	FVector CustomGravityDirection = FVector(0, 0, -1);

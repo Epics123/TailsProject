@@ -28,6 +28,22 @@ void UProwerMovementComponent::SetCustomGravityDir(const FVector& Dir)
 	CustomGravityDirection = Dir.GetSafeNormal();
 }
 
+void UProwerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (ShouldDrawMovementDebug())
+	{
+		const FVector Start = CharacterOwner->GetActorLocation();
+
+		DrawDebugDirectionalArrow(GetWorld(), Start, Start + CharacterOwner->GetActorForwardVector() * 50.0f, 1.0f, FColor::Red, false, -1.0f, 0, 1.0f);
+		DrawDebugDirectionalArrow(GetWorld(), Start, Start + CharacterOwner->GetActorRightVector() * 50.0f, 1.0f, FColor::Green, false, -1.0f, 0, 1.0f);
+
+		const FVector VelocityDir = Velocity.GetSafeNormal();
+		DrawDebugDirectionalArrow(GetWorld(), Start, Start + VelocityDir * 75.0f, 1.0f, FColor::Blue, false, -1.0f, 0, 1.0f);
+	}
+}
+
 void UProwerMovementComponent::PhysWalking(float DeltaTime, int32 Iterations)
 {
 	if (!CharacterOwner || !CharacterOwner->Controller)
@@ -44,8 +60,6 @@ void UProwerMovementComponent::PhysWalking(float DeltaTime, int32 Iterations)
 		CurrentNormal = CustomFloorHit.Normal;
 		SetGravityDirection(CustomGravityDirection);
 	}
-
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Blue);
 
 	const FVector SmoothedNormal = FMath::VInterpTo(PreviousNormal, CurrentNormal, DeltaTime, NormalSmoothingSpeed);
 	PreviousNormal = SmoothedNormal;
@@ -71,11 +85,6 @@ void UProwerMovementComponent::PhysFalling(float DeltaTime, int32 Iterations)
 
 void UProwerMovementComponent::StartFalling(int32 Iterations, float RemainingTime, float TimeTick, const FVector& Delta, const FVector& SubLoc)
 {
-	/*if (CustomFloorHit.bBlockingHit && IsWalkable(CustomFloorHit))
-	{
-		return;
-	}*/
-
 	PreviousNormal = FVector(0.0f, 0.0f, 1.0f);
 
 	CustomGravityDirection = FVector(0.0f, 0.0f, -1.0f);
@@ -86,7 +95,6 @@ void UProwerMovementComponent::StartFalling(int32 Iterations, float RemainingTim
 
 bool UProwerMovementComponent::IsWalkable(const FHitResult& Hit) const
 {
-	
 	//return Super::IsWalkable(Hit);
 	return true;
 }
@@ -96,13 +104,15 @@ bool UProwerMovementComponent::IsMovingOnGround() const
 	return CustomFloorHit.bBlockingHit && IsWalkable(CustomFloorHit) && UpdatedComponent;
 }
 
-UE_DISABLE_OPTIMIZATION
 void UProwerMovementComponent::FindFloor(const FVector& CapsuleLocation, FFindFloorResult& OutFloorResult, bool bCanUseCachedLocation, const FHitResult* DownwardSweepResult) const
 {
 	const FVector Start = CapsuleLocation;
 	const FVector End = Start + CustomGravityDirection * GroundTraceDistance;
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green);
+	if (ShouldDrawMovementDebug())
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Emerald);
+	}
 
 	FHitResult FloorHit;
 	if (GetWorld()->LineTraceSingleByChannel(FloorHit, Start, End, ECC_Visibility))
@@ -132,6 +142,12 @@ bool UProwerMovementComponent::IsValidLandingSpot(const FVector& CapsuleLocation
 
 void UProwerMovementComponent::UpdateOwnerRotation(const FVector& SurfaceNormal, float DeltaTime)
 {
+	const APlayerController* Controller = Cast<APlayerController>(CharacterOwner->GetController());
+	if(!Controller)
+	{
+		return;
+	}
+
 	const FVector ForwardVector = CharacterOwner->GetActorForwardVector();
 
 	// Align to surface
@@ -147,8 +163,6 @@ void UProwerMovementComponent::UpdateOwnerRotation(const FVector& SurfaceNormal,
 		SmoothTargetOrientation = FQuat::Slerp(SmoothTargetOrientation, TargetForwardOrientation, DeltaTime * RotateToVelocityCurve->GetFloatValue(TangentVelocity.Size()));
 		SmoothTargetOrientation.Normalize();
 	}
-
-	// TODO: Handle backwards input case
 
 	CharacterOwner->SetActorRotation(SmoothTargetOrientation);
 }
@@ -166,7 +180,4 @@ void UProwerMovementComponent::CalculateTangentVelocity(const FVector& SurfaceNo
 	}
 
 	Velocity = TangentVelocity + TangetForward * TangentVelocityScale;
-
-	DrawDebugLine(GetWorld(), CharacterOwner->GetActorLocation(), CharacterOwner->GetActorLocation() + Velocity, FColor::Green, false, -1.0f, 0, 1.0f);
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, Velocity.ToString());
 }

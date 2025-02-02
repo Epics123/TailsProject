@@ -204,6 +204,7 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 	//ApplySlopePhysics();
 	
 	//CheckSlopeDetach();
+
 	ResetRotationInAir(DeltaSeconds);
 
 	SmoothResetVerticalFlyDirection(DeltaSeconds);
@@ -264,21 +265,41 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	const APlayerController* PlayerController = Cast<APlayerController>(Controller);
+
+	if (PlayerController != nullptr)
 	{
 		const UProwerMovementComponent* MovementComp = GetProwerMovementComponent();
 
-		const FVector VelocityDir = MovementComp->GetLastUpdateVelocity().GetSafeNormal();
+		const FVector SurfaceNormal = MovementComp->GetCurrentSurfaceNormal();
+		const bool bUseCharacterVectors = ((SurfaceNormal | FVector(0, 0, 1)) < MovementComp->MaxCameraVectorAngle) || MovementComp->bForceCharacterVectors;
 
-		// get forward vector
-		const FVector ForwardDirection = VelocityDir.IsNearlyZero(10.0f) ? GetActorForwardVector() : VelocityDir;//GetActorForwardVector();//GetMovementForwardVector();
-	
-		// get right vector 
-		const FVector RightDirection = (MovementComp->GetCurrentSurfaceNormal() ^ ForwardDirection).GetSafeNormal(); //GetActorRightVector();//GetMovementRightVector();
+		if(bUseCharacterVectors)
+		{
+			const FVector VelocityDir = MovementComp->GetLastUpdateVelocity().GetSafeNormal();
 
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+			// get forward vector
+			const FVector ForwardDirection = VelocityDir.IsNearlyZero(10.0f) ? GetActorForwardVector() : VelocityDir;
+
+			// get right vector 
+			const FVector RightDirection = (MovementComp->GetCurrentSurfaceNormal() ^ ForwardDirection).GetSafeNormal();
+
+			//add movement 
+			AddMovementInput(ForwardDirection, MovementVector.Y);
+			AddMovementInput(RightDirection, MovementVector.X);
+		}
+		else
+		{
+			const FRotator CameraRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+			FVector CameraForward = CameraRotation.Vector();
+			FVector CameraRight = FRotationMatrix(CameraRotation).GetScaledAxis(EAxis::Y);
+
+			CameraForward = (CameraForward - (CameraForward | SurfaceNormal) * SurfaceNormal).GetSafeNormal();
+			CameraRight = (CameraRight - (CameraRight | SurfaceNormal) * SurfaceNormal).GetSafeNormal();
+
+			const FVector MoveDirection = ((CameraForward * MovementVector.Y) + (CameraRight * MovementVector.X)).GetSafeNormal();
+			AddMovementInput(MoveDirection, 1.0f);
+		}
 	}
 }
 
@@ -294,36 +315,6 @@ void AProjectProwerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
-FVector AProjectProwerCharacter::GetMovementForwardVector()
-{
-	if (bUseCharacterVectors)
-	{
-		// Add forward movement.
-		return FVector::VectorPlaneProject(FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X), GetActorQuat().GetAxisZ()).GetSafeNormal();
-	}
-	else //UseCameraVector
-	{
-		// Add forward movement based on camera.
-		return FVector::VectorPlaneProject(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X), GetActorQuat().GetAxisZ()).GetSafeNormal();
-	}
-}
-
-FVector AProjectProwerCharacter::GetMovementRightVector()
-{
-	const FVector AxisZ = GetActorQuat().GetAxisZ();
-
-	if (bUseCharacterVectors)
-	{
-		// Add side movement.
-		return AxisZ ^ FVector::VectorPlaneProject(FRotationMatrix(GetActorRotation()).GetScaledAxis(EAxis::X), AxisZ).GetSafeNormal();
-	}
-	else //UseCameraVectors
-	{
-		// Add side movement based on camera.
-		return AxisZ ^ FVector::VectorPlaneProject(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X), AxisZ).GetSafeNormal();
 	}
 }
 

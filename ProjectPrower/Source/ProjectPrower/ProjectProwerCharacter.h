@@ -105,9 +105,6 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	virtual FVector GetMovementForwardVector();
-	virtual FVector GetMovementRightVector();
-
 	void AimWeapon();
 	void AimWeaponEnd();
 
@@ -142,11 +139,6 @@ protected:
 	virtual void Landed(const FHitResult& Hit) override;
 
 public:
-	/**
-	* If true, the forward and right vectors of the character will be used for moving instead of the camera vectors.
-	*/
-	UPROPERTY(Category = "Movement", BlueprintReadWrite, EditAnywhere)
-	bool bUseCharacterVectors = false;
 
 	UPROPERTY(Category = "Movement", EditAnywhere, BlueprintReadWrite)
 	FRotator DefaultRotationRate;
