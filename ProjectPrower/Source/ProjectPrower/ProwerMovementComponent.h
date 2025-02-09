@@ -51,6 +51,10 @@ public:
 		CurrentFlightTime = MaxFlightTime;
 	}
 
+	/** Calculates the distance between the character's current location and the maximum flight location, normalized to [0, 1] */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float CalculateVerticalDirection() const;
+
 protected:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -133,9 +137,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Flying")
 	float MaxFlightHeightSmoothSpeed = 50.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Flying")
-	float FlyingLateralFriction = 30.0f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Custom Movement | Flying")
 	bool bFlightExhausted = false;

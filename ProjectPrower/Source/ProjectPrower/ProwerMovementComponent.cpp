@@ -40,6 +40,25 @@ void UProwerMovementComponent::UpdateFlightTime(float DeltaTime)
 	CurrentFlightTime -= DeltaTime;
 }
 
+float UProwerMovementComponent::CalculateVerticalDirection() const
+{
+	if(CharacterOwner)
+	{
+		if(bFlightExhausted)
+		{
+			return -1.0f;
+		}
+
+		const FVector CurrentLocation = CharacterOwner->GetActorLocation();
+		const FVector MaxFlightLocation = FVector(CurrentLocation.X, CurrentLocation.Y, MaxFlightZ);
+		const float Dist = (MaxFlightLocation - CurrentLocation).Size();
+
+		return FMath::GetMappedRangeValueClamped(FVector2D(0.0f, MaxFlightZ), FVector2D(0.0f, 1.0f), Dist);
+	}
+
+	return 0.0f;
+}
+
 void UProwerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
