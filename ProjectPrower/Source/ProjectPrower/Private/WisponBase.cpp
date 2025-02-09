@@ -69,7 +69,7 @@ void AWisponBase::PostFireWeapon()
 	}
 
 }
-PRAGMA_DISABLE_OPTIMIZATION
+
 void AWisponBase::FireLaser(const bool bIsAltFire)
 {
 	if (OwningCharacter)

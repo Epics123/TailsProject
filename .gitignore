@@ -76,3 +76,8 @@ ProjectPrower/*_BuiltData.uasset
 
 /ProjectPrower/enc_temp_folder
 /ProjectPrower/Intermediate
+*.bin
+*.uasset
+*.modules
+*.pdb
+*.target

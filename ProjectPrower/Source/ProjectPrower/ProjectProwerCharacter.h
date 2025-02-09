@@ -94,6 +94,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetFlightState();
+	
+	UFUNCTION()
+	void StartFlying();
+	UFUNCTION(BlueprintCallable)
+	void StopFlying();
 
 	USceneComponent* GetCameraPivot() { return CameraPivot; }
 
@@ -107,13 +112,6 @@ protected:
 
 	void AimWeapon();
 	void AimWeaponEnd();
-
-	void StartFlying();
-	void StopFlying();
-	void Fly();
-
-	/* Smoothly resets VerticalFlyDirection back to 0 when fly input is not held*/
-	void SmoothResetVerticalFlyDirection(const float DeltaSeconds);
 
 	void UpdateCameraMode();
 	void ResetRotationInAir(float DeltaSeconds);
