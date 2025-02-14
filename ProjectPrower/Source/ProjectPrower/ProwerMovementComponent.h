@@ -12,13 +12,6 @@
 #include "GameFramework/NavMovementComponent.h"
 #include "ProwerMovementComponent.generated.h"
 
-static TAutoConsoleVariable<int32> CVar_DrawMovementDebug
-(
-	TEXT("Movement.Debug.Draw"),
-	0,
-	TEXT("Draw movement debug information")
-);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFlightExhaustedDelegate);
 
 /**
@@ -36,11 +29,6 @@ public:
 	void SetCustomGravityDir(const FVector& Dir);
 
 	const FVector GetCurrentSurfaceNormal() const { return CurrentNormal; }
-
-	bool ShouldDrawMovementDebug() const
-	{
-		return CVar_DrawMovementDebug.GetValueOnGameThread() != 0;
-	}
 
 	void ResetGravity();
 
@@ -76,7 +64,9 @@ protected:
 
 	virtual bool DoJump(bool bReplayingMoves) override;
 
-	virtual void ApplyVelocityBraking(float DeltaTime, float Friction, float BrakingDeceleration);
+	virtual void ApplyVelocityBraking(float DeltaTime, float Friction, float BrakingDeceleration) override;
+
+	virtual float VisualizeMovement() const override;
 
 private:
 	void UpdateOwnerRotation(const FVector& SurfaceNormal, float DeltaTime);
@@ -105,6 +95,16 @@ public:
 	/** Minimum speed needed to not fall off of surfaces at extreme angles (over 90 degrees) like loops */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
 	float MinSlopeFallSpeed = 1500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | General")
+	TObjectPtr<UCurveFloat> WalkingFrictionFactorCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Slopes")
+	float SlopeEffectStrength = 200.0f;
+
+	/** If our speed is under this value, slopes will affect velocity*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Slopes")
+	float SlopeEffectThreshold = 1800.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Rotation")
 	float RotationSmoothingSpeed = 5.0f;
@@ -155,4 +155,7 @@ private:
 
 	FVector CurrentNormal;
 	FVector PreviousNormal = FVector(0, 0, 1);
+
+	float SlopeFactor;
+	float SlopeAdjustmentSpeed;
 };
