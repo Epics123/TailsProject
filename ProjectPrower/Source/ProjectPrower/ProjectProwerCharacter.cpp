@@ -12,7 +12,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
-#include "CameraManagerComponent.h"
 #include "WisponBase.h"
 #include "PlayerInputData.h"
 
@@ -51,13 +50,9 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera = CreateDefaultSubobject<UProwerCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	CameraManager = CreateDefaultSubobject<UCameraManagerComponent>(TEXT("CameraManager"));
-	CameraManager->DefaultCameraPivotLocation = CameraPivot->GetRelativeLocation();
-	CameraManager->DefaultSocketOffset = CameraBoom->SocketOffset;
 
 	CurrentMovementState = DefaultMovementState;
 
@@ -112,8 +107,6 @@ void AProjectProwerCharacter::EquipWeapon()
 		SetMovementState(EMovementState::WEAPON);
 		ToggleWeaponVisibility(true);
 		CameraBoom->ProbeSize = 5.0f;
-
-		CameraManager->PlayWeaponEquipTransition();
 	}
 }
 
@@ -126,8 +119,6 @@ void AProjectProwerCharacter::UnequipWeapon()
 	SetMovementState(EMovementState::FREE);
 	ToggleWeaponVisibility(false);
 	CameraBoom->ProbeSize = 12.0f;
-
-	CameraManager->PlayWeaponUnequipTransition();
 }
 
 void AProjectProwerCharacter::FireWeapon()
@@ -176,6 +167,8 @@ void AProjectProwerCharacter::BeginPlay()
 			
 		}
 	}
+
+	OnMoveInputReleased(); // Used to kick off idle camera if we don't move when first starting the game
 }
 
 void AProjectProwerCharacter::Tick(float DeltaSeconds)
@@ -215,6 +208,7 @@ void AProjectProwerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 			// Moving
 			EnhancedInputComponent->BindAction(InputData->MoveAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Move);
+			EnhancedInputComponent->BindAction(InputData->MoveAction, ETriggerEvent::Completed, this, &AProjectProwerCharacter::MoveReleased);
 
 			// Looking
 			EnhancedInputComponent->BindAction(InputData->LookAction, ETriggerEvent::Triggered, this, &AProjectProwerCharacter::Look);
@@ -281,7 +275,14 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 			const FVector MoveDirection = ((CameraForward * MovementVector.Y) + (CameraRight * MovementVector.X)).GetSafeNormal();
 			AddMovementInput(MoveDirection, 1.0f);
 		}
+
+		OnMoveInputPressed();
 	}
+}
+
+void AProjectProwerCharacter::MoveReleased()
+{
+	OnMoveInputReleased();
 }
 
 void AProjectProwerCharacter::Look(const FInputActionValue& Value)
@@ -304,7 +305,6 @@ void AProjectProwerCharacter::AimWeapon()
 	if (CurrentMovementState == EMovementState::WEAPON)
 	{
 		bIsAiming = true;
-		CameraManager->PlayAimTransition();
 		bUseControllerRotationYaw = true;
 		
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
@@ -326,7 +326,6 @@ void AProjectProwerCharacter::AimWeaponEnd()
 	if (CurrentMovementState == EMovementState::WEAPON)
 	{
 		bIsAiming = false;
-		CameraManager->PlayAimEndTransition();
 		bUseControllerRotationYaw = false;
 		
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
@@ -390,23 +389,6 @@ void AProjectProwerCharacter::ResetFlightState()
 	}
 }
 
-void AProjectProwerCharacter::UpdateCameraMode()
-{
-	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if(CameraManager && MovementComponent)
-	{
-		const FHitResult FloorHit = MovementComponent->CurrentFloor.HitResult;
-		if(FloorHit.ImpactNormal.Z <= MovementComponent->GetWalkableFloorZ() && !MovementComponent->IsFalling() && !bIsFlying)
-		{
-			//CameraManager->SetCameraMode(ECameraMode::SLOPE);
-		}
-		else
-		{
-			//CameraManager->SetCameraMode(ECameraMode::FREE);
-		}
-	}
-}
-
 void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 {	
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
@@ -418,56 +400,6 @@ void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 			SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaSeconds, 10.0f));
 		}
 	}
-}
-
-void AProjectProwerCharacter::ApplySlopePhysics()
-{
-	/*if(!bIsFlying)
-	{
-		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-		if (MovementComponent)
-		{
-			if (GetVelocity().Length() >= MovementComponent->MinSlopeEffectSpeed)
-			{
-				const FVector SlopeVector = GetActorForwardVector() * (GetActorForwardVector().Z * MovementComponent->SlopeFactor);
-				MovementComponent->Velocity += SlopeVector;
-			}
-		}
-	}*/
-	
-}
-
-void AProjectProwerCharacter::CheckSlopeDetach()
-{
-	/*UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if (MovementComponent && GetActorUpVector().Z <= (MovementComponent->GetWalkableFloorZ() + 0.035f))
-	{
-		if (GetVelocity().Length() <= MovementComponent->MinSlopeSpeed)
-		{
-			const FHitResult FloorHit = MovementComponent->CurrentFloor.HitResult;
-			const FVector EjectionVector = (GetSurfaceEjectionVector() * MovementComponent->SlopeEjectForce) * 10000.0f;
-
-			const float ZRange = FMath::GetMappedRangeValueClamped(FVector2D(MovementComponent->GetWalkableFloorZ(), -1.0f), FVector2D(0.15f, 1.0f), GetActorUpVector().Z);
-
-			MovementComponent->AddForce(EjectionVector * ZRange);
-		}
-	}*/
-}
-
-FVector AProjectProwerCharacter::GetSurfaceEjectionVector(float GravityZMultiplier)
-{
-	FVector FloorNormal;
-	float FloorAngle;
-
-	GetFloorAngle(FloorAngle, FloorNormal);
-	return FVector(FloorNormal.X, FloorNormal.Y, GetProwerMovementComponent()->GetGravityDirection().Z * GravityZMultiplier);
-}
-
-void AProjectProwerCharacter::GetFloorAngle(float& OutAngle, FVector& OutNormal)
-{
-	FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.ImpactNormal;
-	OutAngle = FMath::RadiansToDegrees(FMath::Acos(FloorNormal | FVector::UpVector));
-	OutNormal = FloorNormal;
 }
 
 void AProjectProwerCharacter::ApplyFreeMovementStateSettings()

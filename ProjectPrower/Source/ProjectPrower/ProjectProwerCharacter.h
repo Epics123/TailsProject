@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 
 #include "ProwerMovementComponent.h"
+#include "Camera/ProwerCameraComponent.h"
 
 #include "ProjectProwerCharacter.generated.h"
 
@@ -38,13 +39,10 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UProwerMovementComponent* GetProwerMovementComponent() { return ProwerMovementComponent; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	class UCameraManagerComponent* GetCameraManager() const { return CameraManager; }
-
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class UProwerCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TEnumAsByte<EMovementState> GetCurrentMovementState() { return CurrentMovementState; }
@@ -89,6 +87,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAiming() { return CurrentMovementState == EMovementState::WEAPON && bIsAiming; }
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnMoveInputPressed();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnMoveInputReleased();
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void ToggleJumpballMesh(bool bShowJumpball);
 
@@ -107,19 +111,15 @@ protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
+	void MoveReleased();
+
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
 	void AimWeapon();
 	void AimWeaponEnd();
 
-	void UpdateCameraMode();
 	void ResetRotationInAir(float DeltaSeconds);
-
-	void ApplySlopePhysics();
-	void CheckSlopeDetach();
-	FVector GetSurfaceEjectionVector(float GravityZMultiplier = 1.0f);
-	void GetFloorAngle(float& OutAngle, FVector& OutNormal);
 
 	void ApplyFreeMovementStateSettings();
 	void ApplyWeaponMovementStateSettings();
@@ -169,7 +169,7 @@ private:
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	UProwerCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USceneComponent* CameraPivot;
@@ -177,9 +177,6 @@ private:
 	// Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UPlayerInputData> InputData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UCameraManagerComponent* CameraManager;
 
 	UProwerMovementComponent* ProwerMovementComponent;
 
