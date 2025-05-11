@@ -17,14 +17,6 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
-UENUM(BlueprintType)
-enum class EMovementState
-{
-	FREE = 0	UMETA(DisplayName = "Free"),
-	WEAPON = 1	UMETA(DisplayName = "Weapon"),
-	LOCKED = 2	UMETA(DisplayName = "Locked")
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimStartedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAimEndedDelegate);
 
@@ -45,19 +37,6 @@ public:
 	FORCEINLINE class UProwerCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TEnumAsByte<EMovementState> GetCurrentMovementState() { return CurrentMovementState; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TEnumAsByte<EMovementState> GetDefaultMovementState() { return DefaultMovementState; }
-
-	UFUNCTION(BlueprintCallable)
-	void SetMovementState(TEnumAsByte<EMovementState> NewState);
-
-	/* Returns true if StateToCheck matches the current movement state*/
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool IsInMovementState(TEnumAsByte<EMovementState> StateToCheck) { return CurrentMovementState == StateToCheck; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
 	class AWisponBase* GetCurrentWeapon() { return CurrentWeapon; }
 
 	UFUNCTION(BlueprintCallable)
@@ -75,6 +54,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UnequipWeapon();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnWeaponEquipped();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnWeaponUnequipped();
+
+	UFUNCTION(BlueprintPure)
+	bool IsWeaponEquipped() const;
+
 	UFUNCTION()
 	void FireWeapon();
 
@@ -84,8 +72,23 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleWeaponAltFire();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool IsAiming() { return CurrentMovementState == EMovementState::WEAPON && bIsAiming; }
+	UFUNCTION(BlueprintPure)
+	bool IsAiming() const;
+
+	UFUNCTION(BlueprintPure)
+	bool IsFlying();
+
+	UFUNCTION(BlueprintPure)
+	bool IsFlightBlocked() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetFlightBlocked(bool bBlock);
+
+	UFUNCTION(BlueprintPure)
+	bool IsMoveInputBlocked() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetMoveInputBlocked(bool bBlock);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void OnMoveInputPressed();
@@ -104,6 +107,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StopFlying();
 
+	UFUNCTION(BlueprintCallable)
+	float GetJumpballPitchDuringJump(float ApexProximity, float MinDownwardRotation, float MaxUpwardRotation);
+
 	USceneComponent* GetCameraPivot() { return CameraPivot; }
 
 protected:
@@ -121,9 +127,6 @@ protected:
 
 	void ResetRotationInAir(float DeltaSeconds);
 
-	void ApplyFreeMovementStateSettings();
-	void ApplyWeaponMovementStateSettings();
-
 	class UPlayerInputData* GetInputData() { return InputData; }
 			
 	// APawn interface
@@ -134,15 +137,15 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual void Jump() override;
 	virtual void Landed(const FHitResult& Hit) override;
+
+	virtual void DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos) override;
 
 public:
 
 	UPROPERTY(Category = "Movement", EditAnywhere, BlueprintReadWrite)
 	FRotator DefaultRotationRate;
-
-	UPROPERTY(Category = "Movement", EditDefaultsOnly, BlueprintReadOnly)
-	EMovementState DefaultMovementState = EMovementState::FREE;
 
 	UPROPERTY(Category = "Movement", EditAnywhere, BlueprintReadWrite)
 	bool bIsFlying = false;
@@ -150,11 +153,11 @@ public:
 	UPROPERTY(Category = "Movement", BlueprintReadWrite)
 	float VerticalFlyDirection = 0.0f;
 
-	UPROPERTY(Category = "Weapon", EditAnywhere, BlueprintReadWrite)
-	bool bWeaponEquipped = false;
+	UPROPERTY(Category = "Tags", EditAnywhere, BlueprintReadWrite)
+	FGameplayTagContainer DefaultTags;
 
-	UPROPERTY(Category = "Weapon", EditAnywhere, BlueprintReadWrite)
-	bool bCanEquipWeapon = true;
+	UPROPERTY(BlueprintReadWrite)
+	FGameplayTagContainer GameplayTags;
 
 	UPROPERTY(BlueprintAssignable)
 	FAimStartedDelegate OnAimStarted;
@@ -180,11 +183,7 @@ private:
 
 	UProwerMovementComponent* ProwerMovementComponent;
 
-	EMovementState CurrentMovementState;
-
 	TObjectPtr<class AWisponBase> CurrentWeapon;
-
-	bool bIsAiming = false;
 
 	bool bFlyInputHeld = false;
 

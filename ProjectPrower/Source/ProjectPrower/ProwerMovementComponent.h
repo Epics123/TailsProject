@@ -39,11 +39,20 @@ public:
 		CurrentFlightTime = MaxFlightTime;
 	}
 
+	void ResetAirDeceleration()
+	{
+		BrakingDecelerationFalling = DefaultAirDeceleration;
+	}
+
 	/** Calculates the distance between the character's current location and the maximum flight location, normalized to [0, 1] */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float CalculateVerticalDirection() const;
 
+	UFUNCTION(BlueprintPure)
+	float GetApexProximity(float ApexHeight, float JumpStartHeight) const;
+
 protected:
+	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void PhysWalking(float DeltaTime, int32 Iterations) override;
@@ -145,9 +154,19 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Custom Movement | Flying")
 	bool bFlightInputHeld = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Weapon")
+	float DefaultWeaponWalkSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Custom Movement | Weapon")
+	float DefaultAimWalkSpeed;
+
+	UPROPERTY()
+	float DefaultMaxSpeed;
+
 	float CurrentFlightTime;
 
 	FOnFlightExhaustedDelegate OnFlightExhauseted;
+
+	float DefaultAirDeceleration = 500.0f;
 
 private:
 	FVector CustomGravityDirection = FVector(0, 0, -1);

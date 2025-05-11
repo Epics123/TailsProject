@@ -11,11 +11,21 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "GameplayTags.h"
+
+#include "Engine/Canvas.h"
 
 #include "WisponBase.h"
 #include "PlayerInputData.h"
 
+#include "GameplayTags/MovementGameplayTags.h"
+#include "GameplayTags/WeaponGameplayTags.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogTemplateCharacter, Error, All);
+
+static FName WeaponEquippedTag("Weapon.Equipped");
+static FName CanEquipWeaponTag("Weapon.CanEquip");
+static FName WeaponAimTag("Weapon.Aim");
 
 //////////////////////////////////////////////////////////////////////////
 // AProjectProwerCharacter
@@ -54,28 +64,7 @@ AProjectProwerCharacter::AProjectProwerCharacter(const FObjectInitializer& Objec
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	CurrentMovementState = DefaultMovementState;
-
 	ProwerMovementComponent->OnFlightExhauseted.AddDynamic(this, &AProjectProwerCharacter::StopFlying);
-}
-
-void AProjectProwerCharacter::SetMovementState(TEnumAsByte<EMovementState> NewState)
-{
-	CurrentMovementState = NewState;
-
-	switch (CurrentMovementState)
-	{
-	case EMovementState::FREE:
-		ApplyFreeMovementStateSettings();
-		break;
-	case EMovementState::WEAPON:
-		ApplyWeaponMovementStateSettings();
-		break;
-	case EMovementState::LOCKED:
-		break;
-	default:
-		break;
-	}
 }
 
 void AProjectProwerCharacter::ToggleWeaponVisibility(bool bIsVisible)
@@ -88,7 +77,7 @@ void AProjectProwerCharacter::ToggleWeaponVisibility(bool bIsVisible)
 
 void AProjectProwerCharacter::ToggleWeapon()
 {
-	if(bWeaponEquipped)
+	if(IsWeaponEquipped())
 	{
 		UnequipWeapon();
 	}
@@ -96,34 +85,53 @@ void AProjectProwerCharacter::ToggleWeapon()
 	{
 		EquipWeapon();
 	}
-	bWeaponEquipped = !bWeaponEquipped;
 }
 
 void AProjectProwerCharacter::EquipWeapon()
 {
-	if(bCanEquipWeapon)
+	if(GameplayTags.HasTag(TAG_Weapon_CanEquip))
 	{
+		GameplayTags.AddTag(TAG_Weapon_Equipped);
+
+		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
+		if (MovementComponent->Velocity.Length() >= MovementComponent->MaxWalkSpeed)
+		{
+			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
+		}
+
 		// Update our movement state
-		SetMovementState(EMovementState::WEAPON);
 		ToggleWeaponVisibility(true);
 		CameraBoom->ProbeSize = 5.0f;
+
+		OnWeaponEquipped();
 	}
 }
 
 void AProjectProwerCharacter::UnequipWeapon()
 {
+	GameplayTags.RemoveTag(TAG_Weapon_Equipped);
+
 	// Make sure we are no longer aiming
 	AimWeaponEnd();
 
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	MovementComponent->MaxWalkSpeed = MovementComponent->DefaultMaxSpeed;;
+
 	// Update our movement state
-	SetMovementState(EMovementState::FREE);
 	ToggleWeaponVisibility(false);
 	CameraBoom->ProbeSize = 12.0f;
+	OnWeaponUnequipped();
+}
+
+bool AProjectProwerCharacter::IsWeaponEquipped() const
+{
+	return GameplayTags.HasTag(TAG_Weapon_Equipped);
 }
 
 void AProjectProwerCharacter::FireWeapon()
 {
-	if(CurrentMovementState == EMovementState::WEAPON && CurrentWeapon)
+	if(CurrentWeapon && IsWeaponEquipped())
 	{
 		CurrentWeapon->FireWeapon();
 	}
@@ -131,7 +139,7 @@ void AProjectProwerCharacter::FireWeapon()
 
 void AProjectProwerCharacter::WeaponAltFire()
 {
-	if (CurrentMovementState == EMovementState::WEAPON && CurrentWeapon)
+	if (CurrentWeapon && IsWeaponEquipped())
 	{
 		CurrentWeapon->FireWeapon(true);
 	}
@@ -139,10 +147,57 @@ void AProjectProwerCharacter::WeaponAltFire()
 
 void AProjectProwerCharacter::ToggleWeaponAltFire()
 {
-	if(CurrentWeapon)
+	if(CurrentWeapon && IsWeaponEquipped())
 	{
 		const bool IsInAltFire = CurrentWeapon->IsInAltFire();
 		CurrentWeapon->SetAltFire(!IsInAltFire);
+	}
+}
+
+bool AProjectProwerCharacter::IsAiming() const
+{
+	return IsWeaponEquipped() && GameplayTags.HasTag(TAG_Weapon_Aim);
+}
+
+bool AProjectProwerCharacter::IsFlying()
+{
+	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+	check(MovementComponent);
+
+	return MovementComponent->MovementMode == EMovementMode::MOVE_Flying && GameplayTags.HasTag(TAG_Movement_Flying);;
+}
+
+bool AProjectProwerCharacter::IsFlightBlocked() const
+{
+	return GameplayTags.HasTag(TAG_Movement_BlockFlight);
+}
+
+void AProjectProwerCharacter::SetFlightBlocked(bool bBlock)
+{
+	if(bBlock)
+	{
+		GameplayTags.AddTag(TAG_Movement_BlockFlight);
+	}
+	else
+	{
+		GameplayTags.RemoveTag(TAG_Movement_BlockFlight);
+	}
+}
+
+bool AProjectProwerCharacter::IsMoveInputBlocked() const
+{
+	return GameplayTags.HasTag(TAG_Movement_Locked);
+}
+
+void AProjectProwerCharacter::SetMoveInputBlocked(bool bBlock)
+{
+	if(bBlock)
+	{
+		GameplayTags.AddTag(TAG_Movement_Locked);
+	}
+	else
+	{
+		GameplayTags.RemoveTag(TAG_Movement_Locked);
 	}
 }
 
@@ -150,6 +205,8 @@ void AProjectProwerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	GameplayTags = FGameplayTagContainer(DefaultTags);
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -175,21 +232,41 @@ void AProjectProwerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	//UpdateCameraMode();
-	//ApplySlopePhysics();
-	
-	//CheckSlopeDetach();
-
 	ResetRotationInAir(DeltaSeconds);
+}
 
-	//SmoothResetVerticalFlyDirection(DeltaSeconds);
+void AProjectProwerCharacter::Jump()
+{
+	GetProwerMovementComponent()->bNotifyApex = true;
+	Super::Jump();
 }
 
 void AProjectProwerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-
+	GetProwerMovementComponent()->bNotifyApex = false;
+	GetProwerMovementComponent()->ResetAirDeceleration();
 	ResetFlightState();
+}
+
+void AProjectProwerCharacter::DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos)
+{
+	check(Canvas)
+
+	FDisplayDebugManager& DisplayDebugManager = Canvas->DisplayDebugManager;
+
+	DisplayDebugManager.SetFont(GEngine->GetSmallFont());
+	DisplayDebugManager.SetDrawColor(FColor::Silver);
+	DisplayDebugManager.DrawString(TEXT("Active Gameplay Tags:"));
+
+	const TArray<FGameplayTag> ActiveTags = GameplayTags.GetGameplayTagArray();
+	for (const FGameplayTag& Tag : ActiveTags)
+	{
+		const FString TagName = Tag.ToString();
+		DisplayDebugManager.DrawString(FString::Printf(TEXT("\t%s"), *TagName));
+	}
+
+	Super::DisplayDebug(Canvas, DebugDisplay, YL, YPos);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -203,7 +280,7 @@ void AProjectProwerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 		if(InputData)
 		{
 			// Jumping
-			EnhancedInputComponent->BindAction(InputData->JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+			EnhancedInputComponent->BindAction(InputData->JumpAction, ETriggerEvent::Started, this, &AProjectProwerCharacter::Jump);
 			EnhancedInputComponent->BindAction(InputData->JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 			// Moving
@@ -242,7 +319,7 @@ void AProjectProwerCharacter::Move(const FInputActionValue& Value)
 
 	const APlayerController* PlayerController = Cast<APlayerController>(Controller);
 
-	if (PlayerController != nullptr)
+	if (PlayerController != nullptr && !IsMoveInputBlocked())
 	{
 		const UProwerMovementComponent* MovementComp = GetProwerMovementComponent();
 
@@ -302,20 +379,17 @@ void AProjectProwerCharacter::Look(const FInputActionValue& Value)
 
 void AProjectProwerCharacter::AimWeapon()
 {
-	if (CurrentMovementState == EMovementState::WEAPON)
+	if (IsWeaponEquipped())
 	{
-		bIsAiming = true;
+		GameplayTags.AddTag(TAG_Weapon_Aim);
 		bUseControllerRotationYaw = true;
 		
 		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-		MovementComponent->bOrientRotationToMovement = false;
-		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultAimWalkSpeed;
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultAimWalkSpeed;
 		if(MovementComponent->Velocity.Length() >= MovementComponent->MaxWalkSpeed)
 		{
 			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
 		}
-		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 20.0f;
-		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -15.0f;
 
 		OnAimStarted.Broadcast();
 	}
@@ -323,17 +397,13 @@ void AProjectProwerCharacter::AimWeapon()
 
 void AProjectProwerCharacter::AimWeaponEnd()
 {
-	if (CurrentMovementState == EMovementState::WEAPON)
+	if(IsWeaponEquipped() || IsAiming())
 	{
-		bIsAiming = false;
+		GameplayTags.RemoveTag(TAG_Weapon_Aim);
 		bUseControllerRotationYaw = false;
-		
-		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-		MovementComponent->bOrientRotationToMovement = true;
-		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
 
-		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMax = 90.0f;
-		GetLocalViewingPlayerController()->PlayerCameraManager->ViewPitchMin = -90.0f;
+		UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
+		MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
 
 		OnAimEnded.Broadcast();
 	}
@@ -342,7 +412,7 @@ void AProjectProwerCharacter::AimWeaponEnd()
 void AProjectProwerCharacter::StartFlying()
 {
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if(MovementComponent->IsFalling() && !MovementComponent->bFlightExhausted)
+	if(MovementComponent->IsFalling() && !MovementComponent->bFlightExhausted && !IsFlightBlocked())
 	{
 		StopJumping();
  		ToggleJumpballMesh(false);
@@ -357,6 +427,8 @@ void AProjectProwerCharacter::StartFlying()
 			MovementComponent->bHasFlightReset = false;
 		}
 
+		GameplayTags.AddTag(TAG_Movement_Flying);
+
 		bIsFlying = true;
 		MovementComponent->bFlightInputHeld = true;
 	}
@@ -369,6 +441,7 @@ void AProjectProwerCharacter::StopFlying()
 	{
 		MovementComponent->SetMovementMode(MOVE_Falling);
 		MovementComponent->MaxAcceleration = 600.0f;
+		GameplayTags.RemoveTag(TAG_Movement_Flying);
 	}
 
 	MovementComponent->bFlightInputHeld = false;
@@ -401,27 +474,23 @@ void AProjectProwerCharacter::ResetRotationInAir(float DeltaSeconds)
 		}
 	}
 }
-
-void AProjectProwerCharacter::ApplyFreeMovementStateSettings()
+UE_DISABLE_OPTIMIZATION
+float AProjectProwerCharacter::GetJumpballPitchDuringJump(float ApexProximity, float MinDownwardRotation, float MaxUpwardRotation)
 {
 	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if(MovementComponent)
+	check(MovementComponent);
+
+	float TargetRotationAngle = 0.0f;
+
+	const float VerticalVelocity = MovementComponent->RotateWorldToGravity(MovementComponent->Velocity).Z;
+	if (VerticalVelocity > 0.0f)
 	{
-		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWalkSpeed;
+		TargetRotationAngle = FMath::Lerp(MaxUpwardRotation, 0.0f, ApexProximity);
+	}
+	else
+	{
+		TargetRotationAngle = FMath::Lerp(0.0f, MinDownwardRotation, 1.0f - ApexProximity);
 	}
 
-	bIsAiming = false;
-}
-
-void AProjectProwerCharacter::ApplyWeaponMovementStateSettings()
-{
-	UProwerMovementComponent* MovementComponent = GetProwerMovementComponent();
-	if (MovementComponent)
-	{
-		//MovementComponent->MaxWalkSpeed = MovementComponent->DefaultWeaponWalkSpeed;
-		if(MovementComponent->Velocity.Length() > MovementComponent->MaxWalkSpeed)
-		{
-			MovementComponent->Velocity = MovementComponent->Velocity.GetSafeNormal() * MovementComponent->MaxWalkSpeed;
-		}
-	}
+	return TargetRotationAngle;
 }

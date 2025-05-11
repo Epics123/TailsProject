@@ -11,6 +11,8 @@
 
 #include "GameFramework/PhysicsVolume.h"
 
+#include "ProjectProwerCharacter.h"
+
 // Debug
 #include "DrawDebugHelpers.h"
 #include "Engine/Canvas.h"
@@ -57,6 +59,28 @@ float UProwerMovementComponent::CalculateVerticalDirection() const
 	}
 
 	return 0.0f;
+}
+UE_DISABLE_OPTIMIZATION
+float UProwerMovementComponent::GetApexProximity(float ApexHeight, float JumpStartHeight) const
+{
+	const float VerticalVelocity = RotateWorldToGravity(Velocity).Z;
+	if (VerticalVelocity > 0.0f)
+	{
+		return 1.0f - FMath::Clamp(FMath::Abs(RotateWorldToGravity(Velocity).Z / JumpZVelocity), 0.0f, 1.0f);
+	}
+	else if (ApexHeight > JumpStartHeight)
+	{
+		const float CurrentHeight = CharacterOwner->GetActorLocation().Z;
+		return 1.0f - FMath::Clamp((ApexHeight - CurrentHeight) / (ApexHeight - JumpStartHeight), 0.0f, 1.0f);
+	}
+
+	return 0.0f;
+}
+
+void UProwerMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	DefaultMaxSpeed = MaxWalkSpeed;
 }
 
 void UProwerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -319,9 +343,16 @@ void UProwerMovementComponent::UpdateOwnerRotation(const FVector& SurfaceNormal,
 	FQuat SmoothTargetOrientation = FQuat::Slerp(CharacterOwner->GetActorQuat(), TargetOrientation, DeltaTime * RotationSmoothingSpeed);
 	SmoothTargetOrientation.Normalize();
 
+	bool bSkipRotateToVelocity = false;
+	const AProjectProwerCharacter* Character = Cast<AProjectProwerCharacter>(CharacterOwner);
+	if(Character && Character->IsAiming())
+	{
+		bSkipRotateToVelocity = true; // Skip rotating towards velocity if we are aiming a weapon
+	}
+
 	// Rotate towards velocity
 	const FVector TangentVelocity = Velocity - (Velocity | SurfaceNormal) * SurfaceNormal;
-	if(!TangentVelocity.IsNearlyZero(RotateToVelocityThreshold))
+	if(!TangentVelocity.IsNearlyZero(RotateToVelocityThreshold) && !bSkipRotateToVelocity)
 	{
 		const FQuat TargetForwardOrientation = FRotationMatrix::MakeFromXZ(TangentVelocity.GetSafeNormal(), SurfaceNormal).ToQuat();
 		SmoothTargetOrientation = FQuat::Slerp(SmoothTargetOrientation, TargetForwardOrientation, DeltaTime * RotateToVelocityCurve->GetFloatValue(TangentVelocity.Size()));
@@ -333,6 +364,12 @@ void UProwerMovementComponent::UpdateOwnerRotation(const FVector& SurfaceNormal,
 
 void UProwerMovementComponent::UpdateOwnerRotationFalling(float DeltaTime)
 {
+	const AProjectProwerCharacter* Character = Cast<AProjectProwerCharacter>(CharacterOwner);
+	if (Character && Character->IsAiming())
+	{
+		return;
+	}
+
 	FVector VelocityDir = Velocity.GetSafeNormal();
 	VelocityDir.Z = 0.0f;
 

@@ -37,6 +37,9 @@ public:
 
 	void ResetWeaponFire();
 
+	UFUNCTION(BlueprintPure)
+	class AProjectProwerCharacter* GetWeaponOwner() const { return OwningCharacter; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -7,8 +7,13 @@
 #include "WeaponData.h"
 #include "WisponBase.generated.h"
 
+static TAutoConsoleVariable<int32> CVarDebugWeaponTraces(
+	TEXT("Weapon.DebugWeaponTraces"),
+	0,
+	TEXT("Set to 1 to show weapon debug traces, 0 otherwise"));
+
 UENUM(BlueprintType)
-enum class EWisponType
+enum class EWisponType : uint8
 {
 	LASER = 0	UMETA(DisplayName = "Laser"),
 	BURST = 1	UMETA(DisplayName = "Burst"),
@@ -30,10 +35,10 @@ public:
 	AWisponBase();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TEnumAsByte<EWisponType> GetWisponType() { return CurrentWisponType; }
+	EWisponType GetWisponType() { return CurrentWisponType; }
 
 	UFUNCTION(BlueprintCallable)
-	void SetWisponType(TEnumAsByte<EWisponType> Type) { CurrentWisponType = Type; }
+	void SetWisponType(EWisponType Type) { CurrentWisponType = Type; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UWeaponData* GetCurrentWeaponData() { return WeaponDataMap[CurrentWisponType]; }
@@ -41,14 +46,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsInAltFire() { return bIsAltFireActive; }
 
+	UFUNCTION(BlueprintPure)
+	bool ShouldShowDebugTraces() const { return CVarDebugWeaponTraces.GetValueOnGameThread() > 0; }
+
 	UFUNCTION(BlueprintCallable)
 	void SetAltFire(bool IsActive) { bIsAltFireActive = IsActive; }
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWisponFired(EWisponType WisponType, bool bAltFire);
 
 	virtual void FireWeapon(bool bIsAltFire = false) override;
 
 	virtual void PostFireWeapon() override;
-
-	void FireLaser(const bool bIsAltFire);
 
 
 public:
@@ -56,7 +65,7 @@ public:
 	EWisponType DefaultWisponType = EWisponType::LASER;
 
 	UPROPERTY(EditDefaultsOnly)
-	TMap<TEnumAsByte<EWisponType>, TObjectPtr<UWeaponData>> WeaponDataMap;
+	TMap<EWisponType, TObjectPtr<UWeaponData>> WeaponDataMap;
 
 private:
 	EWisponType CurrentWisponType;

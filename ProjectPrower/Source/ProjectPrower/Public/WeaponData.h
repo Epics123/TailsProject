@@ -24,7 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxTimeBetweenShots = 0.0f;
 
-	/* Initial speed of the projectile when fired, ignored if the projectile is hitscan */
+	/* Initial speed of the projectile when fired, used to "fake" projectile visuals if hitscan */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InitialProjectileSpeed = 0.0f;
 
@@ -39,4 +39,12 @@ public:
 	/* Niagara system used to represent the projectile if it is hitscan */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UNiagaraSystem> ProjecileSystem;
+
+	/* Niagara system to spawn when something is hit by this weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UNiagaraSystem> HitImpactEffect;
+
+	/* Niagara system to spawn at the muzzle of the weapon. Leave null for melee weapons. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UNiagaraSystem> MuzzleFlashEffect;
 };
