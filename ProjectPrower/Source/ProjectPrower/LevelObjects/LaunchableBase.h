@@ -25,19 +25,19 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Launch Settings")
 	float LaunchPower = 200.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(DisplayName="ShouldLockFlight"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Locks", meta=(DisplayName="ShouldLockFlight"))
 	bool bLockFlight;
 
 	// How long to lock flight after being launched
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bLockFlight"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Locks", meta=(EditCondition="bLockFlight"))
 	float FlightLockDuration = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShouldLockMovement"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Locks", meta = (DisplayName = "ShouldLockMovement"))
 	bool bLockMovement;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(EditCondition="bLockMovement"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Locks", meta=(EditCondition="bLockMovement"))
 	float MovementLockDuration = 1.0f;
 };
